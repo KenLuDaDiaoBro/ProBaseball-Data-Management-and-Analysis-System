@@ -14,7 +14,7 @@ from selenium.webdriver.common.keys import Keys
 # 設定目標球隊
 Teams = ["Rays"]
 players_data = []
-Yr = [2022, 2023, 2024]
+Yr = [2024]
 
 # 設定瀏覽器
 s = Service("C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/chromedriver-win64/chromedriver.exe")
@@ -82,9 +82,9 @@ for Year in Yr:
                 elements = element.find_elements(By.CLASS_NAME, "text-stat")
                 Speed = elements[len(elements) - 1].text
                 
-                rows = driver.find_elements(By.XPATH, f"//div[@class='table-savant']//tr[.//span[text()='{Year}']]")
-                GB = rows[1].find_element(By.XPATH, ".//td[2]").text
-                FB = rows[1].find_element(By.XPATH, ".//td[3]").text
+                b = driver.find_elements(By.XPATH, f"//table[@id='playeDiscipline']//tr[.//span[text()='{Year}']]")
+                GB = b[0].find_element(By.XPATH, ".//td[2]").text
+                FB = b[0].find_element(By.XPATH, ".//td[3]").text
                 if float(FB) != 0:
                     GF = round(float(GB) / float(FB) , 2)
                 else:
@@ -92,7 +92,6 @@ for Year in Yr:
                 
                 #print(str(GB) + " " + str(FB) + " " + str(GF))
                 
-                b = driver.find_elements(By.XPATH, f"//table[@id='playeDiscipline']//tr[.//span[text()='{Year}']]")
                 Chase = b[1].find_element(By.XPATH, ".//td[6]").text
                 Whiff = b[1].find_element(By.XPATH, ".//td[11]").text
 
@@ -183,9 +182,9 @@ for Year in Yr:
                 
                 
                 
-                rows = driver.find_elements(By.XPATH, f"//div[@class='table-savant']//tr[.//span[text()='{Year}']]")
-                GB = rows[1].find_element(By.XPATH, ".//td[2]").text
-                FB = rows[1].find_element(By.XPATH, ".//td[3]").text
+                b = driver.find_elements(By.XPATH, f"//table[@id='playeDiscipline']//tr[.//span[text()='{Year}']]")
+                GB = b[0].find_element(By.XPATH, ".//td[2]").text
+                FB = b[0].find_element(By.XPATH, ".//td[3]").text
                 if float(FB) != 0:
                     GF = round(float(GB) / float(FB) , 2)
                 else:
@@ -193,7 +192,6 @@ for Year in Yr:
                 
                 #print(str(GB) + " " + str(FB) + " " + str(GF))
                 
-                b = driver.find_elements(By.XPATH, f"//table[@id='playeDiscipline']//tr[.//span[text()='{Year}']]")
                 Chase = b[1].find_element(By.XPATH, ".//td[6]").text
                 Whiff = b[1].find_element(By.XPATH, ".//td[11]").text
     
