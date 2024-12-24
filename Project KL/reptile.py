@@ -12,12 +12,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 # 設定目標球隊
-Teams = ["Yankees", "Dodgers"]
+Teams = ["Rays"]
 players_data = []
-Yr = [2024, 2023]
+Yr = [2022, 2023, 2024]
 
 # 設定瀏覽器
-s = Service("C:/Users/afatf/Desktop/Project KL/chromedriver-win64/chromedriver.exe")
+s = Service("C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/chromedriver-win64/chromedriver.exe")
 opts = Options()
 opts.add_argument("headless") 
 driver = webdriver.Chrome(service=s, options=opts)
@@ -256,7 +256,9 @@ for Year in Yr:
         except Exception as e:
             print(f"取得{Year}{Player_Name}資訊失敗: {e}")
                 
-        output_dir = "Players_Data"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        output_dir = os.path.join(base_dir, "Players_Data")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
