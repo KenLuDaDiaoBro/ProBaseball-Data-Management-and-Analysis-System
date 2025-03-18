@@ -11,7 +11,7 @@ conn = mysql.connector.connect(
 )
 cursor = conn.cursor()
 
-ID = 0
+NUM = 0
 
 # 🔹 遍歷 Players_Data 目錄
 base_path = "C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/Players_Data"
@@ -44,8 +44,9 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                             continue
 
                         for player in data:
-                            ID += 1
+                            NUM += 1
                             Player = player.get("Player")
+                            ID = player.get("ID")
                             Year = player.get("Year")
                             Team = player.get("Team")
                             Division = player.get("Division")
@@ -73,7 +74,7 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 WH = player.get("Whiff%") or 0
                                 GB = player.get("GB%") or 0
                                 FB = player.get("FB%") or 0
-                                GF = player.get("G/F")
+                                GF = player.get("G/F") or 0
                                 Sprint = player.get("Sprint") or 0
                                 AVGZ = player.get("AVG_Zone")
                                 AVGZ1 = AVGZ[0]
@@ -92,13 +93,13 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 
                                 # 🔹 插入資料
                                 cursor.execute(f"""
-                                    INSERT INTO {table_name} (ID, Name, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBL,
+                                    INSERT INTO {table_name} (NUM, Name, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBL,
                                     SO, BB, SB, CS, AVG, OBP, SLG, OPS, Chase, Whiff, GB, FB, GF, Sprint, AVGZ1, AVGZ2,
                                     AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD) 
-                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                                """, (ID, Player, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBL,
+                                """, (NUM, Player, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBL,
                                       SO, BB, SB, CS, AVG, OBP, SLG, OPS, CH, WH, GB, FB, GF, Sprint, AVGZ1, AVGZ2,
                                       AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD))
 
@@ -121,7 +122,7 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 WH = player.get("Whiff%") or 0
                                 GB = player.get("GB%") or 0
                                 FB = player.get("FB%") or 0
-                                GF = player.get("G/F")
+                                GF = player.get("G/F") or 0
                                 PZ = player.get("Pitch_Zone%")
                                 PZ1 = PZ[0]
                                 PZ2 = PZ[1]
@@ -139,13 +140,13 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 
                                 # 🔹 插入資料
                                 cursor.execute(f"""
-                                    INSERT INTO {table_name} (ID, Name, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
+                                    INSERT INTO {table_name} (NUM, Name, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
                                     HR, BB, SO, WHIP, Chase, Whiff, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
                                     PZ8, PZ9, PZLU, PZRU, PZLD, PZRD) 
-                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s)
-                                """, (ID, Player, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
+                                """, (NUM, Player, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
                                       HR, BB, SO, WHIP, CH, WH, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
                                       PZ8, PZ9, PZLU, PZRU, PZLD, PZRD))
 
