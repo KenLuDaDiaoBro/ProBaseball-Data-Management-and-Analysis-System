@@ -1,10 +1,15 @@
+import { Link } from "react-router-dom";
+
 function Home() {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-blue-900 text-white">
-        <h1 className="text-4xl font-bold">MLB Stats Explorer</h1>
-        <p className="mt-4 text-lg">Search for player stats, teams, and matches.</p>
-      </div>
-    );
-  }
-  
-  export default Home;
+  return (
+    <div className="home-container">
+      <h1 className="title">Welcome to MLB Player Search</h1>
+
+      <Link to="/search">
+        <button className="nav-button">Go to Search</button>
+      </Link>
+    </div>
+  );
+}
+
+export default Home;

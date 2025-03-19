@@ -4,6 +4,7 @@ function PlayerSearch() {
   const [players, setPlayers] = useState([]); // 存放所有球員名稱
   const [searchTerm, setSearchTerm] = useState(""); // 使用者輸入的搜尋關鍵字
   const [filteredPlayers, setFilteredPlayers] = useState([]); // 搜尋結果
+  const [selectedPlayer, setSelectedPlayer] = useState(null); // 存選中的球員
 
   // 從後端 API 抓取球員資料
   useEffect(() => {
@@ -27,27 +28,71 @@ function PlayerSearch() {
     }
   }, [searchTerm, players]);
 
+  // 處理點擊球員名稱，將其填入輸入框
+  const handleSelectPlayer = (playerName) => {
+    setSearchTerm(playerName);
+    setSelectedPlayer(playerName);
+    setFilteredPlayers([]); // 清空建議列表
+  };
+
+  // 按鈕點擊事件，將選擇的球員回傳後端
+  const sendPlayerToBackend = () => {
+    if (!selectedPlayer) {
+      alert("請選擇一位球員！");
+      return;
+    }
+
+    fetch("http://127.0.0.1:5000/api/selected_player", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: selectedPlayer }),
+    })
+      .then((response) => response.json())
+      .then((data) => alert(`後端回應: ${data.message}`))
+      .catch((error) => console.error("Error sending player:", error));
+  };
+
   return (
-    <div className="container">
-      <h2>Search for a Player</h2>
-      {/* 搜尋輸入框 */}
-      <input
-        type="text"
-        placeholder="Enter player name..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      
-      {/* 顯示搜尋結果 */}
-      {filteredPlayers.length > 0 && (
-        <ul className="suggestions">
-          {filteredPlayers.map((player, index) => (
-            <li key={index}>{player.Name}</li>
-          ))}
-        </ul>
-      )}
+    <div className="wrap">
+      <div className="search-container">
+        <h2>Search a Player</h2>
+
+        {/* 搜尋輸入框 */}
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Enter player name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        {/* 顯示搜尋結果 */}
+        {filteredPlayers.length > 0 && (
+          <ul className="suggestions">
+            {filteredPlayers.map((player, index) => (
+              <li key={index} className="suggestion-item" onClick={() => handleSelectPlayer(player.Name)}>
+                {player.Name}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* 送出按鈕 */}
+        <button className="submit-button" onClick={sendPlayerToBackend}>
+          Submit
+        </button>
+
+        {/* 顯示選擇的球員 */}
+        {selectedPlayer && <p className="selected-player">已選擇: {selectedPlayer}</p>}
+      </div>
     </div>
+    
   );
 }
 
 export default PlayerSearch;
+
+// my-mlb-app
+// npm run dev

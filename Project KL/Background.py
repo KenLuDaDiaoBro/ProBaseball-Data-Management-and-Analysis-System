@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import mysql.connector
 
@@ -40,6 +40,18 @@ def get_players():
     except mysql.connector.Error as err:
         print("Database error:", err)
         return jsonify({"error": "Database connection failed"}), 500
+
+@app.route('/api/selected_player', methods=['POST'])
+def receive_selected_player():
+    data = request.json
+    player_name = data.get("name")
+
+    if not player_name:
+        return jsonify({"message": "未提供球員名稱"}), 400
+
+    print(f"收到前端傳來的球員: {player_name}")
+
+    return jsonify({"message": f"成功接收 {player_name}"}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
