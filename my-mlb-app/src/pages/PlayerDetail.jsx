@@ -37,6 +37,7 @@ function PlayerDetail() {
       .catch((error) => console.error("Error fetching players:", error));
   }, []);
 
+  // 搜尋功能
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredPlayers([]); // 搜尋欄為空則清空建議列表
@@ -50,56 +51,28 @@ function PlayerDetail() {
     }
   }, [searchTerm, players]);
 
+  // 選擇球員時自動跳轉
   const handleSelectPlayer = (player) => {
-    setSearchTerm(player.Name);
-    setSelectedPlayer(player);
+    setSearchTerm(""); // 清空搜尋框
     setFilteredPlayers([]);
+    navigate(`/playerDetail/${player.id}`); // 直接跳轉
   };
 
-  const sendPlayerToBackend = () => {
-    if (!selectedPlayer) {
-      alert("請選擇一位球員！");
-      return;
-    }
-
-    console.log("前端發送 ID:", selectedPlayer.id);
-
-    fetch("http://127.0.0.1:5000/api/selected_player", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: selectedPlayer.id }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("後端回應:", data);
-        if (data.error) {
-          alert(`錯誤: ${data.error}`);
-        } else {
-          navigate(`/playerDetail/${selectedPlayer.id}`); // 跳轉到球員詳細頁
-        }
-      })
-      .catch((error) => console.error("Error sending player:", error));
-  };
-
-  if (!playerData || playerData.length === 0) {
-    return <p>Loading player stats...</p>;
-  }
-
-  const playerType = playerData[0]?.Type || "unknown"; // 確保 `Type` 存在
+  if (!playerData.length) return <p>Loading player stats...</p>;
 
   return (
     <div className="player-detail-container">
       {/* 搜尋框 */}
-      <div className="search-box">
+      <div className="player-detail-search-box">
         <input
           type="text"
           placeholder="Search for a player..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
+          className="player-detail-search-input"
         />
         {filteredPlayers.length > 0 && (
-          <ul className="suggestions">
+          <ul className="player-detail-suggestions">
             {filteredPlayers.map((player) => (
               <li key={player.id} onClick={() => handleSelectPlayer(player)}>
                 {player.Name}
@@ -109,73 +82,51 @@ function PlayerDetail() {
         )}
       </div>
 
-      <button onClick={sendPlayerToBackend} className="search-btn">
-        Search
-      </button>
-
-      <h1 className="player-name">
+      <h1 className="player-detail-player-name">
         {playerData.length > 0 ? playerData[0].Name : "Loading..."}
       </h1>
 
-      <div className="player-stats">
+      <div className="player-detail-player-stats">
         {playerData[0].Type === "Batter" ? (
-          <table className="stats-table">
+          <table className="player-detail-stats-table">
             <thead>
               <tr>
-                <th>Year</th>
-                <th>Team</th>
-                <th>PA</th>
-                <th>AB</th>
-                <th>H</th>
-                <th>HR</th>
-                <th>AVG</th>
-                <th>OBP</th>
-                <th>SLG</th>
+                <th>Year</th><th>Team</th><th>PA</th><th>AB</th><th>H</th>
+                <th>2B</th><th>3B</th><th>HR</th><th>RBL</th><th>SO</th>
+                <th>BB</th><th>SB</th><th>CS</th><th>AVG</th><th>OBP</th>
+                <th>SLG</th><th>OPS</th><th>Chase%</th><th>Whiff%</th><th>GB</th>
+                <th>FB</th><th>G/F</th><th>Sprint</th>
               </tr>
             </thead>
             <tbody>
               {playerData.map((stat, index) => (
                 <tr key={index}>
-                  <td>{stat.Year}</td>
-                  <td>{stat.Team}</td>
-                  <td>{stat.PA}</td>
-                  <td>{stat.AB}</td>
-                  <td>{stat.H}</td>
-                  <td>{stat.HR}</td>
-                  <td>{stat.AVG}</td>
-                  <td>{stat.OBP}</td>
-                  <td>{stat.SLG}</td>
+                  <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.PA}</td><td>{stat.AB}</td><td>{stat.H}</td>
+                  <td>{stat.H2}</td><td>{stat.H3}</td><td>{stat.HR}</td><td>{stat.RBL}</td><td>{stat.SO}</td>
+                  <td>{stat.BB}</td><td>{stat.SB}</td><td>{stat.CS}</td><td>{stat.AVG}</td><td>{stat.OBP}</td>
+                  <td>{stat.SLG}</td><td>{stat.OPS}</td><td>{stat.Chase}</td><td>{stat.Whiff}</td><td>{stat.GB}</td>
+                  <td>{stat.FB}</td><td>{stat.GF}</td><td>{stat.Sprint}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        ) : playerType === "Pitcher" ? (
-          <table className="stats-table">
+        ) : playerData[0].Type === "Pitcher" ? (
+          <table className="player-detail-stats-table">
             <thead>
               <tr>
-                <th>Year</th>
-                <th>Team</th>
-                <th>IP</th>
-                <th>ERA</th>
-                <th>WHIP</th>
-                <th>SO</th>
-                <th>BB</th>
-                <th>W</th>
-                <th>L</th>
+                <th>Year</th><th>Team</th><th>W</th><th>L</th><th>ERA</th>
+                <th>IP</th><th>H</th><th>R</th><th>ER</th><th>HR</th>
+                <th>BB</th><th>SO</th><th>WHIP</th><th>Chase%</th><th>Whiff%</th>
+                <th>GB</th><th>FB</th><th>G/F</th>
               </tr>
             </thead>
             <tbody>
               {playerData.map((stat, index) => (
                 <tr key={index}>
-                  <td>{stat.Year}</td>
-                  <td>{stat.Team}</td>
-                  <td>{stat.IP}</td>
-                  <td>{stat.ERA}</td>
-                  <td>{stat.WHIP}</td>
-                  <td>{stat.SO}</td>
-                  <td>{stat.BB}</td>
-                  <td>{stat.W}</td>
-                  <td>{stat.L}</td>
+                  <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA}</td>
+                  <td>{stat.IP}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
+                  <td>{stat.BB}</td><td>{stat.SO}</td><td>{stat.WHIP}</td><td>{stat.Chase}</td><td>{stat.Whiff}</td>
+                  <td>{stat.GB}</td><td>{stat.FB}</td><td>{stat.GF}</td>
                 </tr>
               ))}
             </tbody>
@@ -185,6 +136,7 @@ function PlayerDetail() {
         )}
       </div>
     </div>
+    
   );
 }
 

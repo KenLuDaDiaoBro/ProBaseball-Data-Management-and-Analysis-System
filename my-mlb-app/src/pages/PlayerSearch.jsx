@@ -67,14 +67,14 @@ function PlayerSearch() {
 };
 
   return (
-    <div className="wrap">
-      <div className="search-container">
+    <div className="player-search-wrap">
+      <div className="player-search-container">
         <h2>Search a Player</h2>
 
         {/* 搜尋輸入框 */}
         <input
           type="text"
-          className="search-input"
+          className="player-search-input"
           placeholder="Enter player name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -82,9 +82,9 @@ function PlayerSearch() {
 
         {/* 顯示搜尋結果 */}
         {filteredPlayers.length > 0 && (
-          <ul className="suggestions">
+          <ul className="player-search-suggestions">
             {filteredPlayers.map((player, index) => (
-              <li key={index} className="suggestion-item" onClick={() => handleSelectPlayer(player)}>
+              <li key={index} className="player-search-suggestion-item" onClick={() => handleSelectPlayer(player)}>
                 {player.Name}
               </li>
             ))}
@@ -92,13 +92,13 @@ function PlayerSearch() {
         )}
 
         {/* 送出按鈕 */}
-        <button className="submit-button" onClick={sendPlayerToBackend}>
+        <button className="player-search-submit-button" onClick={sendPlayerToBackend}>
           Submit
         </button>
 
         {/* 顯示選擇的球員 */}
         {selectedPlayer && (
-          <p className="selected-player">
+          <p className="player-search-selected-player">
             已選擇: {selectedPlayer.Name} (ID: {selectedPlayer.id})
           </p>
         )}
