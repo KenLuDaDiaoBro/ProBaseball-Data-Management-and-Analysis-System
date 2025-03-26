@@ -12,9 +12,9 @@ function App() {
 
         {/* 球員搜尋頁面 */}
         <Route path="/search" element={<PlayerSearch />} />
-
+        <Route path="/" element={<PlayerSearch />} />
         {/* 球員詳情頁面 */}
-        <Route path="/player/:id" element={<PlayerDetail />} />
+        <Route path="/playerDetail/:id" element={<PlayerDetail />} />
       </Routes>
     </Router>
   );

@@ -22,12 +22,12 @@ def get_players():
         cursor = conn.cursor(dictionary=True)  # 讓回傳資料變成 dict 格式
 
         # 查詢投手和打者的名稱
-        cursor.execute("SELECT Name FROM pitcher")  
+        cursor.execute("SELECT ANY_VALUE(Name) AS Name , id FROM pitcher GROUP BY id;")  
         pitchers = cursor.fetchall()
 
-        cursor.execute("SELECT Name FROM batter")  
+        cursor.execute("SELECT ANY_VALUE(Name) AS Name , id FROM batter GROUP BY id;")  
         batters = cursor.fetchall()
-
+        
         # 合併結果
         players = pitchers + batters
 
@@ -43,15 +43,46 @@ def get_players():
 
 @app.route('/api/selected_player', methods=['POST'])
 def receive_selected_player():
-    data = request.json
-    player_name = data.get("name")
+    data = request.get_json()
+    player_id = data.get("id")
 
-    if not player_name:
-        return jsonify({"message": "未提供球員名稱"}), 400
+    if not player_id:
+        return jsonify({"error": "No player ID provided"}), 400
 
-    print(f"收到前端傳來的球員: {player_name}")
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    
+    print(f"收到前端傳來的球員: {player_id}")
+    
+    query = """
+    SELECT Name, Year, Team, Type, PA, AB, H, H2, H3, HR, RBL, SO, BB, SB, CS, 
+           AVG, OBP, SLG, OPS, Chase, Whiff, GB, FB, GF, Sprint,
+           AVGZ1, AVGZ2, AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, 
+           AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD 
+    FROM batter
+    WHERE id = %s
+    ORDER BY Year ASC;
+    """
+    
+    cursor.execute(query, (player_id,))
+    player_stats = cursor.fetchall()
+    
+    if not player_stats:
+        query = """
+        SELECT Name, Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, SO, WHIP, 
+               Chase, Whiff, GB, FB, GF, PZ1, PZ2,PZ3, PZ4, PZ5, PZ6, PZ7, PZ8, 
+               PZ9, PZLU, PZRU, PZLD, PZRD 
+        FROM pitcher
+        WHERE id = %s
+        ORDER BY Year ASC;
+        """
+        cursor.execute(query, (player_id,))
+        player_stats = cursor.fetchall()
+        
+    cursor.close()
+    conn.close()
 
-    return jsonify({"message": f"成功接收 {player_name}"}), 200
+    return jsonify(player_stats)
 
 if __name__ == "__main__":
     app.run(debug=True)

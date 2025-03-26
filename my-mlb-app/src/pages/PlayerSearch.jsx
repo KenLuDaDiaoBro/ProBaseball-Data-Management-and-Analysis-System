@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function PlayerSearch() {
-  const [players, setPlayers] = useState([]); // 存放所有球員名稱
-  const [searchTerm, setSearchTerm] = useState(""); // 使用者輸入的搜尋關鍵字
-  const [filteredPlayers, setFilteredPlayers] = useState([]); // 搜尋結果
+  const [players, setPlayers] = useState([]); // 存放球員列表
+  const [searchTerm, setSearchTerm] = useState(""); // 搜尋關鍵字
+  const [filteredPlayers, setFilteredPlayers] = useState([]); // 篩選結果
   const [selectedPlayer, setSelectedPlayer] = useState(null); // 存選中的球員
+  const navigate = useNavigate(); // 用於程式導航（跳轉頁面）
 
   // 從後端 API 抓取球員資料
   useEffect(() => {
@@ -17,42 +19,52 @@ function PlayerSearch() {
   // 當使用者輸入時，更新搜尋結果
   useEffect(() => {
     if (searchTerm === "") {
-      setFilteredPlayers([]); // 如果輸入框是空的，清空建議
+      setFilteredPlayers([]); // 清空搜尋結果
     } else {
       const results = players
-        .filter((player) => 
-          player.Name.toLowerCase().includes(searchTerm.toLowerCase()) // 依據名稱過濾
+        .filter((player) =>
+          player.Name.toLowerCase().includes(searchTerm.toLowerCase())
         )
         .slice(0, 5); // 只顯示前 5 個匹配的結果
       setFilteredPlayers(results);
     }
   }, [searchTerm, players]);
 
-  // 處理點擊球員名稱，將其填入輸入框
-  const handleSelectPlayer = (playerName) => {
-    setSearchTerm(playerName);
-    setSelectedPlayer(playerName);
+  // 處理點擊球員名稱，選擇該球員
+  const handleSelectPlayer = (player) => {
+    setSearchTerm(player.Name);
+    setSelectedPlayer(player); // 設定選擇的球員，包含 ID 和 Name
     setFilteredPlayers([]); // 清空建議列表
   };
 
-  // 按鈕點擊事件，將選擇的球員回傳後端
+  // 按鈕點擊事件，將選擇的球員 ID 傳給後端
   const sendPlayerToBackend = () => {
     if (!selectedPlayer) {
       alert("請選擇一位球員！");
       return;
     }
 
+    console.log("前端發送 ID:", selectedPlayer.id); // 確保這裡不是 undefined
+
     fetch("http://127.0.0.1:5000/api/selected_player", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name: selectedPlayer }),
+      body: JSON.stringify({ id: selectedPlayer.id }), // 傳 ID
     })
-      .then((response) => response.json())
-      .then((data) => alert(`後端回應: ${data.message}`))
-      .catch((error) => console.error("Error sending player:", error));
-  };
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("後端回應:", data);
+      alert(`後端回應: ${JSON.stringify(data)}`);
+      if (data.error) {
+        alert(`錯誤: ${data.error}`);
+      } else {
+        navigate(`/playerDetail/${selectedPlayer.id}`); // ⭐ 跳轉到球員詳細頁
+      }
+    })
+    .catch((error) => console.error("Error sending player:", error));
+};
 
   return (
     <div className="wrap">
@@ -72,7 +84,7 @@ function PlayerSearch() {
         {filteredPlayers.length > 0 && (
           <ul className="suggestions">
             {filteredPlayers.map((player, index) => (
-              <li key={index} className="suggestion-item" onClick={() => handleSelectPlayer(player.Name)}>
+              <li key={index} className="suggestion-item" onClick={() => handleSelectPlayer(player)}>
                 {player.Name}
               </li>
             ))}
@@ -85,14 +97,14 @@ function PlayerSearch() {
         </button>
 
         {/* 顯示選擇的球員 */}
-        {selectedPlayer && <p className="selected-player">已選擇: {selectedPlayer}</p>}
+        {selectedPlayer && (
+          <p className="selected-player">
+            已選擇: {selectedPlayer.Name} (ID: {selectedPlayer.id})
+          </p>
+        )}
       </div>
     </div>
-    
   );
 }
 
 export default PlayerSearch;
-
-// my-mlb-app
-// npm run dev
