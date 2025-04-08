@@ -66,15 +66,19 @@ function PlayerDetail() {
   };
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/players") // 你要有這個 endpoint 回傳所有球員資料
+    fetch("http://127.0.0.1:5000/api/players_stats")
       .then((response) => response.json())
       .then((data) => setAllPlayersData(data))
       .catch((error) => console.error("Error fetching all player stats:", error));
   }, []);
 
   const calculateRelativePercent = (playerValue, allValues, isLowerBetter = false) => {
+    if (!allValues.length || isNaN(playerValue)) return 0;
+  
     const sorted = [...allValues].sort((a, b) => isLowerBetter ? a - b : b - a);
     const rank = sorted.findIndex(val => val === playerValue);
+    if (rank === -1) return 0;
+  
     return Math.round(((sorted.length - rank) / sorted.length) * 100);
   };
 
@@ -92,19 +96,17 @@ function PlayerDetail() {
     }
   
     return fields.map((field) => {
+      const currentValue = parseFloat(current[field]);
       const all = players
-        .filter(p => p.Type === type)
-        .map(p => parseFloat(p[field]))
-        .filter(n => !isNaN(n));
-  
-      const isLowerBetter = (field === "ERA" || field === "WHIP" || field === "BB");
-      const percent = calculateRelativePercent(parseFloat(current[field]), all, isLowerBetter);
-  
-      return {
-        field,
-        value: current[field],
-        percent
-      };
+        .map((p) => parseFloat(p[field]))
+        .filter((n) => !isNaN(n));
+      console.log(`${field}:`, { currentValue, all });
+    
+      const percent = all.length
+        ? Math.round((all.filter((n) => n < currentValue).length / all.length) * 100)
+        : 0;
+    
+      return { field, value: currentValue, percent };
     });
   };
 
@@ -136,13 +138,6 @@ function PlayerDetail() {
         {playerData.length > 0 ? playerData[0].Name : "Loading..."}
       </h1>
 
-      <div className="player-gauges" style={{ display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "flex-start", padding: "10px 0" }}>
-        <StatGauge percentage={parseFloat(playerData[0].AVG) * 100} label="AVG" value={playerData[0].AVG} color="#3b82f6" />
-        <StatGauge percentage={parseFloat(playerData[0].OBP) * 100} label="OBP" value={playerData[0].OBP} color="#60a5fa" />
-        <StatGauge percentage={parseFloat(playerData[0].SLG) * 100} label="SLG" value={playerData[0].SLG} color="#10b981" />
-        <StatGauge percentage={parseFloat(playerData[0].OPS) * 100} label="OPS" value={playerData[0].OPS} color="#f59e0b" />
-      </div>
-
       <div className="player-detail-gauges">
         {getGaugeData().map((item, index) => (
           <div key={index} className="gauge-item">
@@ -153,9 +148,10 @@ function PlayerDetail() {
                 trailColor: "#d1d5db"
               })}
             >
-              <div style={{ fontSize: 16, marginBottom: 5 }}>{item.percent}%</div>
+              <div style={{ fontSize: 16, marginBottom: 5 }}>
+                {item.percent}
+              </div>
               <strong style={{ fontSize: 14 }}>{item.field}</strong>
-              <div style={{ fontSize: 12 }}>{item.value}</div>
             </CircularProgressbarWithChildren>
           </div>
         ))}

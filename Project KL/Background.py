@@ -41,6 +41,70 @@ def get_players():
         print("Database error:", err)
         return jsonify({"error": "Database connection failed"}), 500
 
+@app.route('/api/players_stats', methods=['GET'])
+def get_all_players_stats():
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 打者百分比統計
+        batter_query = '''
+            SELECT 
+                b1.id,
+                MAX(b1.Name) AS Name,
+                'Batter' AS Type,
+                ROUND(100 * (
+                    SELECT COUNT(*) FROM batter b2 WHERE b2.OPS <= b1.OPS
+                ) / (SELECT COUNT(*) FROM batter), 0) AS OPS,
+                ROUND(100 * (
+                    SELECT COUNT(*) FROM batter b2 WHERE b2.AVG <= b1.AVG
+                ) / (SELECT COUNT(*) FROM batter), 0) AS AVG,
+                ROUND(100 * (
+                    SELECT COUNT(*) FROM batter b2 WHERE b2.SLG <= b1.SLG
+                ) / (SELECT COUNT(*) FROM batter), 0) AS SLG,
+                ROUND(100 * (
+                    SELECT COUNT(*) FROM batter b2 WHERE b2.OBP <= b1.OBP
+                ) / (SELECT COUNT(*) FROM batter), 0) AS OBP
+            FROM batter b1
+            GROUP BY b1.id
+        '''
+        cursor.execute(batter_query)
+        batters = cursor.fetchall()
+
+        # 投手百分比統計
+        pitcher_query = '''
+            SELECT 
+                p1.id,
+                MAX(p1.Name) AS Name,
+                'Pitcher' AS Type,
+                ROUND(100 * (
+                    SELECT COUNT(*) FROM pitcher p2 WHERE p2.ERA >= p1.ERA
+                ) / (SELECT COUNT(*) FROM pitcher), 0) AS ERA,
+                ROUND(100 * (
+                    SELECT COUNT(*) FROM pitcher p2 WHERE p2.WHIP >= p1.WHIP
+                ) / (SELECT COUNT(*) FROM pitcher), 0) AS WHIP,
+                ROUND(100 * (
+                    SELECT COUNT(*) FROM pitcher p2 WHERE p2.SO <= p1.SO
+                ) / (SELECT COUNT(*) FROM pitcher), 0) AS SO,
+                ROUND(100 * (
+                    SELECT COUNT(*) FROM pitcher p2 WHERE p2.BB >= p1.BB
+                ) / (SELECT COUNT(*) FROM pitcher), 0) AS BB
+            FROM pitcher p1
+            GROUP BY p1.id
+        '''
+        cursor.execute(pitcher_query)
+        pitchers = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        all_stats = batters + pitchers
+        return jsonify(all_stats)
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return jsonify({"error": "Database connection failed"}), 500
+
 @app.route('/api/selected_player', methods=['POST'])
 def receive_selected_player():
     data = request.get_json()
