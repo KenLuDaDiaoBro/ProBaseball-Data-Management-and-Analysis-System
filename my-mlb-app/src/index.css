@@ -289,39 +289,59 @@ button:focus-visible {
 /* 球員名稱 */
 .player-detail-player-name {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 100px;
+  left: 30px;
   font-size: 28px;
   font-weight: bold;
   color: black;
   margin: 0;
 }
 
+.player-detail-gauges {
+  position: absolute;
+  top: 80px;
+  right: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  width: 180px;
+  gap: 20px;
+}
+
+.gauge-item {
+  width: 80px;
+  height: 80px;
+}
+
 /* 球員數據表格 */
 .player-detail-stats-table {
   position: absolute;
-  top: 200px;
-  left: 20px;
-  width: 100%;
-  max-width: 800px; /* 限制表格最大寬度 */
-  margin: 20px auto; /* 讓表格置中 */
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   border-collapse: collapse;
+  font-size: 16px;
+  color: #333;
+  background-color: white;
+  z-index: 1;
 }
 
-/* 表格標題與欄位 */
-.player-detail-stats-table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: center;
-}
-
-/* 表格標題樣式 */
 .player-detail-stats-table th {
-  padding: 12px;
+  background-color: #f2f2f2;
+  color: #333;
+  font-weight: 600;
   border: 1px solid #ddd;
+  padding: 10px;
   text-align: center;
-  background: #007bff;
-  color: white;
+}
+
+.player-detail-stats-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.player-detail-stats-table tr:hover {
+  background-color: #f9f9f9;
 }
 
 /* 按鈕樣式 */
@@ -343,4 +363,26 @@ button:focus-visible {
 }
 .player-detail-button-primary:hover {
   background-color: #0056b3;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* 正上方主頁圖案 */
+.home-icon {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  z-index: 2;
 }

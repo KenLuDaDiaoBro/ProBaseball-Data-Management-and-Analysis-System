@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import StatGauge from "./StatGauge";
+import {
+  CircularProgressbarWithChildren,
+  buildStyles
+} from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 function PlayerDetail() {
   const { id } = useParams(); // 取得 URL 中的球員 ID
@@ -9,6 +15,7 @@ function PlayerDetail() {
   const [players, setPlayers] = useState([]); // 存儲所有球員列表
   const [filteredPlayers, setFilteredPlayers] = useState([]); // 篩選後的球員
   const [selectedPlayer, setSelectedPlayer] = useState(null); // 存儲選擇的球員
+  const [allPlayersData, setAllPlayersData] = useState([]);
 
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/selected_player", {
@@ -58,6 +65,49 @@ function PlayerDetail() {
     navigate(`/playerDetail/${player.id}`); // 直接跳轉
   };
 
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/api/players") // 你要有這個 endpoint 回傳所有球員資料
+      .then((response) => response.json())
+      .then((data) => setAllPlayersData(data))
+      .catch((error) => console.error("Error fetching all player stats:", error));
+  }, []);
+
+  const calculateRelativePercent = (playerValue, allValues, isLowerBetter = false) => {
+    const sorted = [...allValues].sort((a, b) => isLowerBetter ? a - b : b - a);
+    const rank = sorted.findIndex(val => val === playerValue);
+    return Math.round(((sorted.length - rank) / sorted.length) * 100);
+  };
+
+  const getGaugeData = () => {
+    if (!players.length || !playerData.length) return [];
+  
+    const current = playerData[0];
+    const type = current.Type;
+  
+    let fields = [];
+    if (type === "Batter") {
+      fields = ["AVG", "OBP", "SLG", "OPS"];
+    } else if (type === "Pitcher") {
+      fields = ["ERA", "WHIP", "SO", "BB"];
+    }
+  
+    return fields.map((field) => {
+      const all = players
+        .filter(p => p.Type === type)
+        .map(p => parseFloat(p[field]))
+        .filter(n => !isNaN(n));
+  
+      const isLowerBetter = (field === "ERA" || field === "WHIP" || field === "BB");
+      const percent = calculateRelativePercent(parseFloat(current[field]), all, isLowerBetter);
+  
+      return {
+        field,
+        value: current[field],
+        percent
+      };
+    });
+  };
+
   if (!playerData.length) return <p>Loading player stats...</p>;
 
   return (
@@ -85,6 +135,31 @@ function PlayerDetail() {
       <h1 className="player-detail-player-name">
         {playerData.length > 0 ? playerData[0].Name : "Loading..."}
       </h1>
+
+      <div className="player-gauges" style={{ display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "flex-start", padding: "10px 0" }}>
+        <StatGauge percentage={parseFloat(playerData[0].AVG) * 100} label="AVG" value={playerData[0].AVG} color="#3b82f6" />
+        <StatGauge percentage={parseFloat(playerData[0].OBP) * 100} label="OBP" value={playerData[0].OBP} color="#60a5fa" />
+        <StatGauge percentage={parseFloat(playerData[0].SLG) * 100} label="SLG" value={playerData[0].SLG} color="#10b981" />
+        <StatGauge percentage={parseFloat(playerData[0].OPS) * 100} label="OPS" value={playerData[0].OPS} color="#f59e0b" />
+      </div>
+
+      <div className="player-detail-gauges">
+        {getGaugeData().map((item, index) => (
+          <div key={index} className="gauge-item">
+            <CircularProgressbarWithChildren
+              value={item.percent}
+              styles={buildStyles({
+                pathColor: "#3b82f6",
+                trailColor: "#d1d5db"
+              })}
+            >
+              <div style={{ fontSize: 16, marginBottom: 5 }}>{item.percent}%</div>
+              <strong style={{ fontSize: 14 }}>{item.field}</strong>
+              <div style={{ fontSize: 12 }}>{item.value}</div>
+            </CircularProgressbarWithChildren>
+          </div>
+        ))}
+      </div>
 
       <div className="player-detail-player-stats">
         {playerData[0].Type === "Batter" ? (
@@ -135,6 +210,16 @@ function PlayerDetail() {
           <p>Unknown player type</p>
         )}
       </div>
+
+      <button className="back-button" onClick={() => navigate(-1)}>←</button>
+
+      <img
+        className="home-icon"
+        src="/home-icon.svg" // 建議放 public 目錄
+        alt="Home"
+        onClick={() => navigate("/")}
+        style={{ height: "30px" }}
+      />
     </div>
     
   );
