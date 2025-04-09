@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap');
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -27,6 +28,7 @@ a:hover {
 }
 
 body {
+  font-family: 'Inter', sans-serif;
   margin: 0;
   display: flex;
   place-items: center;
@@ -297,19 +299,19 @@ button:focus-visible {
   margin: 0;
 }
 
-.player-detail-gauges {
+.gauge-wrapper {
   position: absolute;
-  top: 80px;
-  right: 40px;
-  display: flex;
-  flex-wrap: wrap;
-  width: 180px;
-  gap: 20px;
+  top: 100px;
+  right: 150px;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  grid-template-rows: repeat(2, auto);
+  gap: 40px 150px; /* 上下 24px、左右 40px 的間距 */
 }
 
 .gauge-item {
-  width: 80px;
-  height: 80px;
+  width: 180px;
+  height: 180px;
 }
 
 /* 球員數據表格 */

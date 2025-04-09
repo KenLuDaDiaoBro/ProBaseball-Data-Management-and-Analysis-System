@@ -14,7 +14,6 @@ function PlayerDetail() {
   const [searchTerm, setSearchTerm] = useState(""); // 存儲搜尋關鍵字
   const [players, setPlayers] = useState([]); // 存儲所有球員列表
   const [filteredPlayers, setFilteredPlayers] = useState([]); // 篩選後的球員
-  const [selectedPlayer, setSelectedPlayer] = useState(null); // 存儲選擇的球員
   const [allPlayersData, setAllPlayersData] = useState([]);
 
   useEffect(() => {
@@ -72,45 +71,49 @@ function PlayerDetail() {
       .catch((error) => console.error("Error fetching all player stats:", error));
   }, []);
 
-  const calculateRelativePercent = (playerValue, allValues, isLowerBetter = false) => {
-    if (!allValues.length || isNaN(playerValue)) return 0;
-  
-    const sorted = [...allValues].sort((a, b) => isLowerBetter ? a - b : b - a);
-    const rank = sorted.findIndex(val => val === playerValue);
-    if (rank === -1) return 0;
-  
-    return Math.round(((sorted.length - rank) / sorted.length) * 100);
-  };
-
   const getGaugeData = () => {
-    if (!players.length || !playerData.length) return [];
+    if (!players.length || !playerData.length || !allPlayersData.length) return [];
   
     const current = playerData[0];
     const type = current.Type;
   
     let fields = [];
+    let lowerIsBetter = {};
+  
     if (type === "Batter") {
       fields = ["AVG", "OBP", "SLG", "OPS"];
     } else if (type === "Pitcher") {
       fields = ["ERA", "WHIP", "SO", "BB"];
+      lowerIsBetter = { ERA: true, WHIP: true, BB: true, SO: false };
     }
   
     return fields.map((field) => {
       const currentValue = parseFloat(current[field]);
-      const all = players
+      const allValues = allPlayersData
+        .filter((p) => p.Type === type)
         .map((p) => parseFloat(p[field]))
         .filter((n) => !isNaN(n));
-      console.log(`${field}:`, { currentValue, all });
-    
-      const percent = all.length
-        ? Math.round((all.filter((n) => n < currentValue).length / all.length) * 100)
-        : 0;
-    
+  
+      const isLowerBetter = lowerIsBetter[field] || false;
+  
+      const sorted = [...allValues].sort((a, b) => isLowerBetter ? a - b : b - a);
+      const rank = sorted.findIndex(val => val === currentValue);
+      const percent = rank === -1 ? 0 : Math.round(((sorted.length - rank) / sorted.length) * 100);
+  
       return { field, value: currentValue, percent };
     });
   };
 
+  const getColorByPercent = (percent) => {
+    if (percent >= 90) return "#3b82f6"; // 藍
+    if (percent >= 70) return "#10b981"; // 綠
+    if (percent >= 40) return "#facc15"; // 黃
+    return "#ef4444"; // 紅
+  };
+
   if (!playerData.length) return <p>Loading player stats...</p>;
+
+  const gaugeData = getGaugeData();
 
   return (
     <div className="player-detail-container">
@@ -138,20 +141,20 @@ function PlayerDetail() {
         {playerData.length > 0 ? playerData[0].Name : "Loading..."}
       </h1>
 
-      <div className="player-detail-gauges">
-        {getGaugeData().map((item, index) => (
-          <div key={index} className="gauge-item">
+      <div className="gauge-wrapper">
+        {gaugeData.map((item, index) => (
+          <div className="gauge-item" key={index}>
             <CircularProgressbarWithChildren
               value={item.percent}
               styles={buildStyles({
-                pathColor: "#3b82f6",
+                pathColor: getColorByPercent(item.percent),
                 trailColor: "#d1d5db"
               })}
             >
-              <div style={{ fontSize: 16, marginBottom: 5 }}>
+              <div style={{ fontSize: 36, fontWeight: "bold", marginBottom: 8 }}>
                 {item.percent}
               </div>
-              <strong style={{ fontSize: 14 }}>{item.field}</strong>
+              <strong style={{ fontSize: 16, fontWeight: "bold" }}>{item.field}</strong>
             </CircularProgressbarWithChildren>
           </div>
         ))}
