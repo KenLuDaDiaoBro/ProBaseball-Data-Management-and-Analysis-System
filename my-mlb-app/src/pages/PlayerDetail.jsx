@@ -83,8 +83,8 @@ function PlayerDetail() {
     if (type === "Batter") {
       fields = ["AVG", "OBP", "SLG", "OPS"];
     } else if (type === "Pitcher") {
-      fields = ["ERA", "WHIP", "SO", "BB"];
-      lowerIsBetter = { ERA: true, WHIP: true, BB: true, SO: false };
+      fields = ["ERA", "WHIP", "K9", "BB9"]; // 替換 SO 和 BB
+      lowerIsBetter = { ERA: true, WHIP: true, BB9: true, K9: false }; // 調整這邊的 key 名也要對應
     }
   
     return fields.map((field) => {

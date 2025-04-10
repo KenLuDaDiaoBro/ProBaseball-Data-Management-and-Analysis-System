@@ -50,12 +50,12 @@ def get_all_players_stats():
         # 打者數據
         batter_query = '''
             SELECT 
-                id,
-                Name,
-                'Batter' AS Type,
-                OPS, AVG, SLG, OBP
-            FROM batter
-            GROUP BY id
+                ANY_VALUE(Type) AS Type,
+                ANY_VALUE(OPS) AS OPS,
+                ANY_VALUE(AVG) AS AVG,
+                ANY_VALUE(SLG) AS SLG,
+                ANY_VALUE(OBP) AS OBP,
+            id FROM batter GROUP BY id;
         '''
         cursor.execute(batter_query)
         batters = cursor.fetchall()
@@ -63,12 +63,27 @@ def get_all_players_stats():
         # 投手數據
         pitcher_query = '''
             SELECT 
+                ANY_VALUE(Type) AS Type,
+                ANY_VALUE(IP) AS IP,
+                ANY_VALUE(ERA) AS ERA,
+                ANY_VALUE(WHIP) AS WHIP,
+                ANY_VALUE(SO) AS SO,
+                ANY_VALUE(BB) AS BB,
                 id,
-                Name,
-                'Pitcher' AS Type,
-                ERA, WHIP, SO, BB
+                ROUND(
+                    ANY_VALUE(SO) / NULLIF(
+                        (FLOOR(ANY_VALUE(IP)) + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10 / 3)),
+                        0
+                    ) * 9, 2
+                ) AS K9,
+                ROUND(
+                    ANY_VALUE(BB) / NULLIF(
+                        (FLOOR(ANY_VALUE(IP)) + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10 / 3)),
+                        0
+                    ) * 9, 2
+                ) AS BB9
             FROM pitcher
-            GROUP BY id
+            GROUP BY id;
         '''
         cursor.execute(pitcher_query)
         pitchers = cursor.fetchall()
