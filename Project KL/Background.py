@@ -128,7 +128,19 @@ def receive_selected_player():
         query = """
         SELECT Name, Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, SO, WHIP, 
                Chase, Whiff, GB, FB, GF, PZ1, PZ2,PZ3, PZ4, PZ5, PZ6, PZ7, PZ8, 
-               PZ9, PZLU, PZRU, PZLD, PZRD 
+               PZ9, PZLU, PZRU, PZLD, PZRD, 
+               ROUND(
+                    ANY_VALUE(SO) / NULLIF(
+                        (FLOOR(ANY_VALUE(IP)) + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10 / 3)),
+                        0
+                    ) * 9, 2
+                ) AS K9,
+                ROUND(
+                    ANY_VALUE(BB) / NULLIF(
+                        (FLOOR(ANY_VALUE(IP)) + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10 / 3)),
+                        0
+                    ) * 9, 2
+                ) AS BB9
         FROM pitcher
         WHERE id = %s
         ORDER BY Year ASC;

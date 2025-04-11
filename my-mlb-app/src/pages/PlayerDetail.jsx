@@ -15,6 +15,7 @@ function PlayerDetail() {
   const [players, setPlayers] = useState([]); // 存儲所有球員列表
   const [filteredPlayers, setFilteredPlayers] = useState([]); // 篩選後的球員
   const [allPlayersData, setAllPlayersData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(2024);
 
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/selected_player", {
@@ -74,8 +75,10 @@ function PlayerDetail() {
   const getGaugeData = () => {
     if (!players.length || !playerData.length || !allPlayersData.length) return [];
   
-    const current = playerData[0];
+    const current = playerData.find((p) => p.Year ===  selectedYear); // 選特定年份的數據
     const type = current.Type;
+  
+    if (!current || !type) return [];
   
     let fields = [];
     let lowerIsBetter = {};
@@ -83,22 +86,23 @@ function PlayerDetail() {
     if (type === "Batter") {
       fields = ["AVG", "OBP", "SLG", "OPS"];
     } else if (type === "Pitcher") {
-      fields = ["ERA", "WHIP", "K9", "BB9"]; // 替換 SO 和 BB
-      lowerIsBetter = { ERA: true, WHIP: true, BB9: true, K9: false }; // 調整這邊的 key 名也要對應
+      fields = ["ERA", "WHIP", "K9", "BB9"];
+      lowerIsBetter = { ERA: true, WHIP: true, BB9: true, K9: false };
     }
   
     return fields.map((field) => {
       const currentValue = parseFloat(current[field]);
       const allValues = allPlayersData
-        .filter((p) => p.Type === type)
+        .filter((p) => p.Type === type && p.Year === selectedYear)
         .map((p) => parseFloat(p[field]))
         .filter((n) => !isNaN(n));
   
       const isLowerBetter = lowerIsBetter[field] || false;
-  
       const sorted = [...allValues].sort((a, b) => isLowerBetter ? a - b : b - a);
       const rank = sorted.findIndex(val => val === currentValue);
       const percent = rank === -1 ? 0 : Math.round(((sorted.length - rank) / sorted.length) * 100);
+
+      console.log(current)
   
       return { field, value: currentValue, percent };
     });
@@ -140,6 +144,22 @@ function PlayerDetail() {
       <h1 className="player-detail-player-name">
         {playerData.length > 0 ? playerData[0].Name : "Loading..."}
       </h1>
+
+      <div style={{ marginBottom: "16px" }}>
+        <label htmlFor="yearSelect" style={{ marginRight: "8px", fontWeight: "bold" }}>Select Year:</label>
+        <select
+          id="yearSelect"
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          style={{ padding: "4px 8px", borderRadius: "6px", fontWeight: "bold" }}
+        >
+          {Array.from(new Set(playerData.map((p) => p.Year)))
+            .sort((a, b) => b - a)
+            .map((year) => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+        </select>
+      </div>
 
       <div className="gauge-wrapper">
         {gaugeData.map((item, index) => (
@@ -190,8 +210,8 @@ function PlayerDetail() {
               <tr>
                 <th>Year</th><th>Team</th><th>W</th><th>L</th><th>ERA</th>
                 <th>IP</th><th>H</th><th>R</th><th>ER</th><th>HR</th>
-                <th>BB</th><th>SO</th><th>WHIP</th><th>Chase%</th><th>Whiff%</th>
-                <th>GB</th><th>FB</th><th>G/F</th>
+                <th>SO</th><th>K9</th><th>BB</th><th>BB9</th><th>WHIP</th>
+                <th>Chase%</th><th>Whiff%</th><th>GB</th><th>FB</th><th>G/F</th>
               </tr>
             </thead>
             <tbody>
@@ -199,8 +219,8 @@ function PlayerDetail() {
                 <tr key={index}>
                   <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA}</td>
                   <td>{stat.IP}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
-                  <td>{stat.BB}</td><td>{stat.SO}</td><td>{stat.WHIP}</td><td>{stat.Chase}</td><td>{stat.Whiff}</td>
-                  <td>{stat.GB}</td><td>{stat.FB}</td><td>{stat.GF}</td>
+                  <td>{stat.SO}</td><td>{stat.K9}</td><td>{stat.BB}</td><td>{stat.BB9}</td><td>{stat.WHIP}</td>
+                  <td>{stat.Chase}</td><td>{stat.Whiff}</td><td>{stat.GB}</td><td>{stat.FB}</td><td>{stat.GF}</td>
                 </tr>
               ))}
             </tbody>
