@@ -43,6 +43,8 @@ def get_players():
 
 @app.route('/api/players_stats', methods=['GET'])
 def get_all_players_stats():
+    year = request.args.get('year')  # 從 URL 參數取得 year，例如 ?year=2023
+
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
@@ -50,42 +52,46 @@ def get_all_players_stats():
         # 打者數據
         batter_query = '''
             SELECT 
-                ANY_VALUE(Type) AS Type,
-                ANY_VALUE(OPS) AS OPS,
-                ANY_VALUE(AVG) AS AVG,
-                ANY_VALUE(SLG) AS SLG,
-                ANY_VALUE(OBP) AS OBP,
-            id FROM batter GROUP BY id;
+                Year,
+                Type,
+                OPS,
+                AVG,
+                SLG,
+                OBP,
+                id
+            FROM batter
+            WHERE Year = %s;
         '''
-        cursor.execute(batter_query)
+        cursor.execute(batter_query, (year,))
         batters = cursor.fetchall()
 
         # 投手數據
         pitcher_query = '''
             SELECT 
-                ANY_VALUE(Type) AS Type,
-                ANY_VALUE(IP) AS IP,
-                ANY_VALUE(ERA) AS ERA,
-                ANY_VALUE(WHIP) AS WHIP,
-                ANY_VALUE(SO) AS SO,
-                ANY_VALUE(BB) AS BB,
+                Year,
+                Type,
+                IP,
+                ERA,
+                WHIP,
+                SO,
+                BB,
                 id,
                 ROUND(
-                    ANY_VALUE(SO) / NULLIF(
-                        (FLOOR(ANY_VALUE(IP)) + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10 / 3)),
+                    SO / NULLIF(
+                        (FLOOR(IP) + ((IP - FLOOR(IP)) * 10 / 3)),
                         0
                     ) * 9, 2
                 ) AS K9,
                 ROUND(
-                    ANY_VALUE(BB) / NULLIF(
-                        (FLOOR(ANY_VALUE(IP)) + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10 / 3)),
+                    BB / NULLIF(
+                        (FLOOR(IP) + ((IP - FLOOR(IP)) * 10 / 3)),
                         0
                     ) * 9, 2
                 ) AS BB9
             FROM pitcher
-            GROUP BY id;
+            WHERE Year = %s;
         '''
-        cursor.execute(pitcher_query)
+        cursor.execute(pitcher_query, (year,))
         pitchers = cursor.fetchall()
 
         cursor.close()

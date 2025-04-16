@@ -27,13 +27,20 @@ function PlayerDetail() {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setPlayerStats(data);
+  
+          // 取得最大年份作為預設 selectedYear
+          const years = data.map(p => p.Year).filter(y => typeof y === 'number');
+          const maxYear = Math.max(...years);
+          setSelectedYear(maxYear);
         } else {
-          setPlayerStats([]); // 避免 undefined
+          setPlayerStats([]);
+          setSelectedYear(null); // 清除年份選擇
         }
       })
       .catch((error) => {
         console.error("Error fetching player details:", error);
         setPlayerStats([]);
+        setSelectedYear(null);
       });
   }, [id]);
 
@@ -66,16 +73,28 @@ function PlayerDetail() {
   };
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/players_stats")
-      .then((response) => response.json())
-      .then((data) => setAllPlayersData(data))
-      .catch((error) => console.error("Error fetching all player stats:", error));
-  }, []);
+    if (selectedYear) {
+      getGaugeData();
+    }
+  }, [selectedYear]);
+
+  fetch(`http://127.0.0.1:5000/api/players_stats?year=${selectedYear}`)
+  .then(response => response.json())
+  .then(data => {
+    // 根據年份篩選到的數據
+    setAllPlayersData(data);
+  })
+  .catch(error => {
+    console.error("Error fetching stats:", error);
+  });
 
   const getGaugeData = () => {
     if (!players.length || !playerData.length || !allPlayersData.length) return [];
   
-    const current = playerData.find((p) => p.Year ===  selectedYear); // 選特定年份的數據
+    const current = playerData.find((p) => Number(p.Year) === Number(selectedYear));
+    console.log("🧪 current:", current);
+    console.log("📅 selectedYear:", selectedYear);
+    console.log("🧮 allPlayersData sample:", allPlayersData.slice(0, 5));
     const type = current.Type;
   
     if (!current || !type) return [];
@@ -89,6 +108,7 @@ function PlayerDetail() {
       fields = ["ERA", "WHIP", "K9", "BB9"];
       lowerIsBetter = { ERA: true, WHIP: true, BB9: true, K9: false };
     }
+
   
     return fields.map((field) => {
       const currentValue = parseFloat(current[field]);
@@ -103,6 +123,8 @@ function PlayerDetail() {
       const percent = rank === -1 ? 0 : Math.round(((sorted.length - rank) / sorted.length) * 100);
 
       console.log(current)
+      
+      console.log("📊 field:", fields, "currentValue:", currentValue, "allValues:", allValues);
   
       return { field, value: currentValue, percent };
     });
