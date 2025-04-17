@@ -210,40 +210,39 @@ button:focus-visible {
 /* ===== PlayerDetail 頁面 ===== */
 /* ============================= */
 
-.player-detail-wrap{
-  width: 100vw; /* 佔滿整個視窗寬度 */
-  height: 100vh; /* 佔滿整個視窗高度 */
+/* ========== 外部包裝 ========== */
+.player-detail-wrap {
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  background-color: #f8f9fa; /* 設定背景色 */
-  margin:0 auto;
+  background-color: #f8f9fa;
+  margin: 0 auto;
 }
 
-/* PlayerDetail 頁面主要容器 */
 .player-detail-container {
-  background: none; /* 移除背景色 */
-  box-shadow: none; /* 移除陰影 */
+  background: none;
+  box-shadow: none;
   padding: 0;
   border: none;
 }
 
-/* 搜尋框外部容器 */
+/* ========== 搜尋列 ========== */
 .player-detail-search-box {
   position: absolute;
-  top: 20px;   /* 距離頂部 20px */
-  right: 20px; /* 距離右側 20px */
-  width: 250px; /* 固定寬度 */
+  top: 20px;
+  right: 20px;
+  width: 250px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* 讓搜尋框和建議列表靠右 */
-  z-index: 1000; /* 確保它顯示在最上層 */
+  align-items: flex-end;
+  z-index: 1000;
   text-align: center;
 }
 
-/* 搜尋輸入框 */
 .player-detail-search-input {
   width: 100%;
   padding: 12px;
@@ -253,16 +252,15 @@ button:focus-visible {
   outline: none;
 }
 
-/* 搜尋建議列表 */
 .player-detail-suggestions {
   position: absolute;
   top: 100%;
-  left: -12px; /* 讓它左對齊搜尋框 */
-  width: 100%; /* 確保寬度等同搜尋框 */
+  left: -12px;
+  width: 100%;
   background: white;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   max-height: 250px;
   overflow-y: auto;
   z-index: 10;
@@ -271,7 +269,6 @@ button:focus-visible {
   margin: 5px 0;
 }
 
-/* 每個搜尋建議項目 */
 .player-detail-suggestions li {
   padding: 10px;
   cursor: pointer;
@@ -288,7 +285,7 @@ button:focus-visible {
   color: white;
 }
 
-/* 球員名稱 */
+/* ========== 標題 ========== */
 .player-detail-player-name {
   position: absolute;
   top: 100px;
@@ -299,6 +296,7 @@ button:focus-visible {
   margin: 0;
 }
 
+/* ========== 量表圖表 ========== */
 .gauge-wrapper {
   position: absolute;
   top: 100px;
@@ -306,7 +304,7 @@ button:focus-visible {
   display: grid;
   grid-template-columns: repeat(2, auto);
   grid-template-rows: repeat(2, auto);
-  gap: 40px 150px; /* 上下 24px、左右 40px 的間距 */
+  gap: 40px 150px;
 }
 
 .gauge-item {
@@ -314,7 +312,21 @@ button:focus-visible {
   height: 180px;
 }
 
-/* 球員數據表格 */
+.gauge-percent {
+  font-size: 28px;
+  font-weight: bold;
+  color: #000;
+}
+
+.gauge-label {
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 4px;
+  display: block;
+  color: #333;
+}
+
+/* ========== 表格 ========== */
 .player-detail-stats-table {
   position: absolute;
   bottom: 20px;
@@ -327,26 +339,24 @@ button:focus-visible {
   z-index: 1;
 }
 
-.player-detail-stats-table th {
-  background-color: #f2f2f2;
-  color: #333;
-  font-weight: 600;
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: center;
-}
-
+.player-detail-stats-table th,
 .player-detail-stats-table td {
   border: 1px solid #ddd;
   padding: 10px;
   text-align: center;
 }
 
+.player-detail-stats-table th {
+  background-color: #f2f2f2;
+  color: #333;
+  font-weight: 600;
+}
+
 .player-detail-stats-table tr:hover {
   background-color: #f9f9f9;
 }
 
-/* 按鈕樣式 */
+/* ========== 按鈕 ========== */
 .player-detail-button {
   margin-top: 20px;
   padding: 12px 20px;
@@ -358,15 +368,16 @@ button:focus-visible {
   transition: 0.3s;
 }
 
-/* 主要按鈕 */
 .player-detail-button-primary {
   background-color: #007bff;
   color: white;
 }
+
 .player-detail-button-primary:hover {
   background-color: #0056b3;
 }
 
+/* ========== 其他圖標按鈕 ========== */
 .back-button {
   position: absolute;
   top: 20px;
@@ -379,12 +390,46 @@ button:focus-visible {
   z-index: 2;
 }
 
-/* 正上方主頁圖案 */
 .home-icon {
   position: absolute;
-  top: 20px;
+  top: 40px;
   left: 50%;
   transform: translateX(-50%);
+  width: 40px;   /* 控制大小 */
+  height: 40px;
   cursor: pointer;
   z-index: 2;
+}
+
+.year-select-wrapper {
+  position: absolute;
+  top: 160px; /* 根據畫面情況微調 */
+  left: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  z-index: 2;
+}
+
+.year-select-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.year-select-dropdown {
+  padding: 8px 12px;
+  font-size: 16px;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.year-select-dropdown:hover,
+.year-select-dropdown:focus {
+  border-color: #0056b3;
 }

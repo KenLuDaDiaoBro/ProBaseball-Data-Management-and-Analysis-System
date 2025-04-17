@@ -15,7 +15,8 @@ function PlayerDetail() {
   const [players, setPlayers] = useState([]); // 存儲所有球員列表
   const [filteredPlayers, setFilteredPlayers] = useState([]); // 篩選後的球員
   const [allPlayersData, setAllPlayersData] = useState([]);
-  const [selectedYear, setSelectedYear] = useState(2024);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [loadedYears, setLoadedYears] = useState(new Set());
 
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/selected_player", {
@@ -74,19 +75,16 @@ function PlayerDetail() {
 
   useEffect(() => {
     if (selectedYear) {
-      getGaugeData();
+      fetch(`http://127.0.0.1:5000/api/players_stats?year=${selectedYear}`)
+        .then(response => response.json())
+        .then(data => {
+          setAllPlayersData(data);
+        })
+        .catch(error => {
+          console.error("Error fetching stats:", error);
+        });
     }
-  }, [selectedYear]);
-
-  fetch(`http://127.0.0.1:5000/api/players_stats?year=${selectedYear}`)
-  .then(response => response.json())
-  .then(data => {
-    // 根據年份篩選到的數據
-    setAllPlayersData(data);
-  })
-  .catch(error => {
-    console.error("Error fetching stats:", error);
-  });
+  }, [selectedYear]); // ✅ 修改：依賴 selectedYear
 
   const getGaugeData = () => {
     if (!players.length || !playerData.length || !allPlayersData.length) return [];
@@ -167,15 +165,15 @@ function PlayerDetail() {
         {playerData.length > 0 ? playerData[0].Name : "Loading..."}
       </h1>
 
-      <div style={{ marginBottom: "16px" }}>
-        <label htmlFor="yearSelect" style={{ marginRight: "8px", fontWeight: "bold" }}>Select Year:</label>
+      <div className="year-select-wrapper">
+        <label htmlFor="yearSelect" className="year-select-label">Select Year:</label>
         <select
           id="yearSelect"
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
-          style={{ padding: "4px 8px", borderRadius: "6px", fontWeight: "bold" }}
+          className="year-select-dropdown"
         >
-          {Array.from(new Set(playerData.map((p) => p.Year)))
+          {Array.from(new Set(playerData.map(p => p.Year)))
             .sort((a, b) => b - a)
             .map((year) => (
               <option key={year} value={year}>{year}</option>
@@ -193,10 +191,8 @@ function PlayerDetail() {
                 trailColor: "#d1d5db"
               })}
             >
-              <div style={{ fontSize: 36, fontWeight: "bold", marginBottom: 8 }}>
-                {item.percent}
-              </div>
-              <strong style={{ fontSize: 16, fontWeight: "bold" }}>{item.field}</strong>
+              <div className="gauge-percent">{item.percent}</div>
+              <strong className="gauge-label">{item.field}</strong>
             </CircularProgressbarWithChildren>
           </div>
         ))}
@@ -254,13 +250,15 @@ function PlayerDetail() {
 
       <button className="back-button" onClick={() => navigate(-1)}>←</button>
 
-      <img
-        className="home-icon"
-        src="/home-icon.svg" // 建議放 public 目錄
-        alt="Home"
-        onClick={() => navigate("/")}
-        style={{ height: "30px" }}
-      />
+      <div className="player-detail-image">
+        <img
+          className="home-icon"
+          src="/home-icon.svg"
+          alt="Home"
+          onClick={() => navigate("/")}
+        />
+      </div>
+      
     </div>
     
   );
