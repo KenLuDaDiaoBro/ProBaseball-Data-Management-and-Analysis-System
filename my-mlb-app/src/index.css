@@ -29,11 +29,10 @@ a:hover {
 
 body {
   font-family: 'Inter', sans-serif;
-  margin: 0;
   display: flex;
   place-items: center;
   min-width: 320px;
-  min-height: 100vh;
+  overflow-y: scroll;
 }
 
 h1 {
@@ -220,20 +219,20 @@ button:focus-visible {
   justify-content: center;
   text-align: center;
   background-color: #f8f9fa;
-  margin: 0 auto;
 }
 
 .player-detail-container {
+  height: 100vh;
   background: none;
   box-shadow: none;
-  padding: 0;
   border: none;
+  padding-bottom: 30px;
 }
 
 /* ========== 搜尋列 ========== */
 .player-detail-search-box {
   position: absolute;
-  top: 20px;
+  top: 42px;
   right: 20px;
   width: 250px;
   display: flex;
@@ -296,10 +295,43 @@ button:focus-visible {
   margin: 0;
 }
 
-/* ========== 量表圖表 ========== */
-.gauge-wrapper {
+.player-detail-year-select-wrapper {
   position: absolute;
-  top: 100px;
+  top: 160px;
+  left: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  z-index: 2;
+}
+
+.player-detail-year-select-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.player-detail-year-select-dropdown {
+  padding: 8px 12px;
+  font-size: 16px;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.player-detail-year-select-dropdown:hover,
+.player-detail-year-select-dropdown:focus {
+  border-color: #0056b3;
+}
+
+/* ========== 量表圖表 ========== */
+.player-detail-gauge-wrapper {
+  position: absolute;
+  top: 130px;
   right: 150px;
   display: grid;
   grid-template-columns: repeat(2, auto);
@@ -307,18 +339,18 @@ button:focus-visible {
   gap: 40px 150px;
 }
 
-.gauge-item {
-  width: 180px;
-  height: 180px;
+.player-detail-gauge-item {
+  width: 160px;
+  height: 160px;
 }
 
-.gauge-percent {
+.player-detail-gauge-percent {
   font-size: 28px;
   font-weight: bold;
   color: #000;
 }
 
-.gauge-label {
+.player-detail-gauge-label {
   font-size: 18px;
   font-weight: bold;
   margin-top: 4px;
@@ -327,9 +359,16 @@ button:focus-visible {
 }
 
 /* ========== 表格 ========== */
+.player-detail-stats-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 20px;
+  margin-bottom: 60px; /* ✅ 加這一行製造空隙 */
+}
+
 .player-detail-stats-table {
   position: absolute;
-  bottom: 20px;
+  top: 550px;
   left: 50%;
   transform: translateX(-50%);
   border-collapse: collapse;
@@ -354,6 +393,12 @@ button:focus-visible {
 
 .player-detail-stats-table tr:hover {
   background-color: #f9f9f9;
+}
+
+.player-detail-stats-table td:nth-child(2),
+.player-detail-stats-table th:nth-child(2) {
+  min-width: 80px; /* 可視情況調整，例如 100px */
+  white-space: nowrap;
 }
 
 /* ========== 按鈕 ========== */
@@ -399,37 +444,4 @@ button:focus-visible {
   height: 40px;
   cursor: pointer;
   z-index: 2;
-}
-
-.year-select-wrapper {
-  position: absolute;
-  top: 160px; /* 根據畫面情況微調 */
-  left: 30px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 16px;
-  z-index: 2;
-}
-
-.year-select-label {
-  font-weight: 600;
-  color: #333;
-}
-
-.year-select-dropdown {
-  padding: 8px 12px;
-  font-size: 16px;
-  border: 2px solid #007bff;
-  border-radius: 8px;
-  background-color: white;
-  color: #333;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.3s;
-}
-
-.year-select-dropdown:hover,
-.year-select-dropdown:focus {
-  border-color: #0056b3;
 }

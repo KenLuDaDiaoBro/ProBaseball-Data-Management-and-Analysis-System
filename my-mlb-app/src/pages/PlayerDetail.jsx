@@ -165,13 +165,13 @@ function PlayerDetail() {
         {playerData.length > 0 ? playerData[0].Name : "Loading..."}
       </h1>
 
-      <div className="year-select-wrapper">
-        <label htmlFor="yearSelect" className="year-select-label">Select Year:</label>
+      <div className="player-detail-year-select-wrapper">
+        <label htmlFor="yearSelect" className="player-detail-year-select-label">Select Year:</label>
         <select
           id="yearSelect"
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="year-select-dropdown"
+          className="player-detail-year-select-dropdown"
         >
           {Array.from(new Set(playerData.map(p => p.Year)))
             .sort((a, b) => b - a)
@@ -181,9 +181,9 @@ function PlayerDetail() {
         </select>
       </div>
 
-      <div className="gauge-wrapper">
+      <div className="player-detail-gauge-wrapper">
         {gaugeData.map((item, index) => (
-          <div className="gauge-item" key={index}>
+          <div className="player-detail-gauge-item" key={index}>
             <CircularProgressbarWithChildren
               value={item.percent}
               styles={buildStyles({
@@ -191,14 +191,14 @@ function PlayerDetail() {
                 trailColor: "#d1d5db"
               })}
             >
-              <div className="gauge-percent">{item.percent}</div>
-              <strong className="gauge-label">{item.field}</strong>
+              <div className="player-detail-gauge-percent">{item.percent}</div>
+              <strong className="player-detail-gauge-label">{item.field}</strong>
             </CircularProgressbarWithChildren>
           </div>
         ))}
       </div>
 
-      <div className="player-detail-player-stats">
+      <div className="player-detail-stats-wrapper">
         {playerData[0].Type === "Batter" ? (
           <table className="player-detail-stats-table">
             <thead>

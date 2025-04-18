@@ -51,14 +51,7 @@ def get_all_players_stats():
 
         # 打者數據
         batter_query = '''
-            SELECT 
-                Year,
-                Type,
-                OPS,
-                AVG,
-                SLG,
-                OBP,
-                id
+            SELECT Year, Team, Type, OPS, AVG, SLG, OBP, id
             FROM batter
             WHERE Year = %s;
         '''
@@ -67,15 +60,7 @@ def get_all_players_stats():
 
         # 投手數據
         pitcher_query = '''
-            SELECT 
-                Year,
-                Type,
-                IP,
-                ERA,
-                WHIP,
-                SO,
-                BB,
-                id,
+            SELECT Year, Team, Type, IP, ERA, WHIP, SO, BB, id,
                 ROUND(
                     SO / NULLIF(
                         (FLOOR(IP) + ((IP - FLOOR(IP)) * 10 / 3)),

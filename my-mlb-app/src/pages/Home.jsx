@@ -6,7 +6,7 @@ function Home() {
       <h1 className="home-title">Welcome to MLB Player Search</h1>
 
       <Link to="/search">
-        <button className="home-nav-button">Go to Search</button>
+        <button className="home-nav-button">Player Search</button>
       </Link>
     </div>
   );
