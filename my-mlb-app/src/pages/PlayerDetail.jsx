@@ -135,9 +135,76 @@ function PlayerDetail() {
     return "#ef4444"; // 紅
   };
 
+  const gaugeData = getGaugeData();
+
+  const getBatterSummary = () => {
+    const summary = {
+      PA: 0, AB: 0, H: 0, H2: 0, H3: 0, HR: 0, RBI: 0, SO: 0,
+      BB: 0, SB: 0, CS: 0, AVG: 0, OBP: 0, SLG: 0, OPS: 0, count: 0
+    };
+  
+    playerData.forEach(stat => {
+      if (stat.Team && stat.Team.includes("Team")) return;
+  
+      summary.PA += Number(stat.PA) || 0;
+      summary.AB += Number(stat.AB) || 0;
+      summary.H += Number(stat.H) || 0;
+      summary.H2 += Number(stat.H2) || 0;
+      summary.H3 += Number(stat.H3) || 0;
+      summary.HR += Number(stat.HR) || 0;
+      summary.RBI += Number(stat.RBI) || 0;
+      summary.SO += Number(stat.SO) || 0;
+      summary.BB += Number(stat.BB) || 0;
+      summary.SB += Number(stat.SB) || 0;
+      summary.CS += Number(stat.CS) || 0;
+      summary.OBP += parseFloat(stat.OBP) * Number(stat.PA) || 0;
+    });
+  
+    summary.AVG = (summary.H / summary.AB).toFixed(3) || 0;
+    summary.OBP = (summary.OBP / summary.PA).toFixed(3);
+    summary.SLG = ((summary.H + summary.H2 + 2 * summary.H3 + 3 * summary.HR) / summary.AB).toFixed(3) || 0;
+    summary.OPS = (Number(summary.OBP) + Number(summary.SLG)).toFixed(3) || 0;
+  
+    return summary;
+  };
+  
+  const getPitcherSummary = () => {
+    const summary = {
+      W: 0, L: 0, ERA: 0, IP: 0, H: 0, R: 0, ER: 0, HR: 0,
+      SO: 0, K9: 0, BB: 0, BB9: 0, WHIP: 0, count: 0
+    };
+  
+    playerData.forEach(stat => {
+      if (stat.Team && stat.Team.includes("Team")) return;
+  
+      summary.W += Number(stat.W) || 0;
+      summary.L += Number(stat.L) || 0;
+      summary.ERA += parseFloat(stat.ERA) || 0;
+      summary.IP += Number(stat.IP) * 3 + (parseFloat(stat.IP) - Number(stat.IP)) * 10 || 0;
+      summary.H += Number(stat.H) || 0;
+      summary.R += Number(stat.R) || 0;
+      summary.ER += Number(stat.ER) || 0;
+      summary.HR += Number(stat.HR) || 0;
+      summary.SO += Number(stat.SO) || 0;
+      summary.K9 += parseFloat(stat.K9) || 0;
+      summary.BB += Number(stat.BB) || 0;
+      summary.BB9 += parseFloat(stat.BB9) || 0;
+      summary.WHIP += parseFloat(stat.WHIP) || 0;
+      summary.count += 1;
+    });
+  
+    summary.ERA = (summary.ERA / summary.count).toFixed(2);
+    summary.K9 = (summary.K9 / summary.count).toFixed(2);
+    summary.BB9 = (summary.BB9 / summary.count).toFixed(2);
+    summary.WHIP = (summary.WHIP / summary.count).toFixed(2);
+  
+    return summary;
+  };
+
   if (!playerData.length) return <p>Loading player stats...</p>;
 
-  const gaugeData = getGaugeData();
+  const batterSummary = playerData[0].Type === "Batter" ? getBatterSummary() : null;
+  const pitcherSummary = playerData[0].Type === "Pitcher" ? getPitcherSummary() : null;
 
   return (
     <div className="player-detail-container">
@@ -204,7 +271,7 @@ function PlayerDetail() {
             <thead>
               <tr>
                 <th>Year</th><th>Team</th><th>PA</th><th>AB</th><th>H</th>
-                <th>2B</th><th>3B</th><th>HR</th><th>RBL</th><th>SO</th>
+                <th>2B</th><th>3B</th><th>HR</th><th>RBI</th><th>SO</th>
                 <th>BB</th><th>SB</th><th>CS</th><th>AVG</th><th>OBP</th>
                 <th>SLG</th><th>OPS</th><th>Chase%</th><th>Whiff%</th><th>GB</th>
                 <th>FB</th><th>G/F</th><th>Sprint</th>
@@ -212,14 +279,22 @@ function PlayerDetail() {
             </thead>
             <tbody>
               {playerData.map((stat, index) => (
-                <tr key={index}>
+                <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
                   <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.PA}</td><td>{stat.AB}</td><td>{stat.H}</td>
-                  <td>{stat.H2}</td><td>{stat.H3}</td><td>{stat.HR}</td><td>{stat.RBL}</td><td>{stat.SO}</td>
+                  <td>{stat.H2}</td><td>{stat.H3}</td><td>{stat.HR}</td><td>{stat.RBI}</td><td>{stat.SO}</td>
                   <td>{stat.BB}</td><td>{stat.SB}</td><td>{stat.CS}</td><td>{stat.AVG}</td><td>{stat.OBP}</td>
                   <td>{stat.SLG}</td><td>{stat.OPS}</td><td>{stat.Chase}</td><td>{stat.Whiff}</td><td>{stat.GB}</td>
                   <td>{stat.FB}</td><td>{stat.GF}</td><td>{stat.Sprint}</td>
                 </tr>
               ))}
+              <tr className="summary-row">
+                <td colSpan={2}>Career</td>
+                <td>{batterSummary.PA}</td><td>{batterSummary.AB}</td><td>{batterSummary.H}</td>
+                <td>{batterSummary.H2}</td><td>{batterSummary.H3}</td><td>{batterSummary.HR}</td><td>{batterSummary.RBI}</td><td>{batterSummary.SO}</td>
+                <td>{batterSummary.BB}</td><td>{batterSummary.SB}</td><td>{batterSummary.CS}</td><td>{batterSummary.AVG}</td><td>{batterSummary.OBP}</td>
+                <td>{batterSummary.SLG}</td><td>{batterSummary.OPS}</td>
+                <td colSpan={6}></td>
+              </tr>
             </tbody>
           </table>
         ) : playerData[0].Type === "Pitcher" ? (
@@ -234,13 +309,20 @@ function PlayerDetail() {
             </thead>
             <tbody>
               {playerData.map((stat, index) => (
-                <tr key={index}>
+                <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
                   <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA}</td>
                   <td>{stat.IP}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
                   <td>{stat.SO}</td><td>{stat.K9}</td><td>{stat.BB}</td><td>{stat.BB9}</td><td>{stat.WHIP}</td>
                   <td>{stat.Chase}</td><td>{stat.Whiff}</td><td>{stat.GB}</td><td>{stat.FB}</td><td>{stat.GF}</td>
                 </tr>
               ))}
+              <tr className="summary-row">
+                <td colSpan={2}>Career</td>
+                <td>{pitcherSummary.W}</td><td>{pitcherSummary.L}</td><td>{pitcherSummary.ERA}</td>
+                <td>{pitcherSummary.IP}</td><td>{pitcherSummary.H}</td><td>{pitcherSummary.R}</td><td>{pitcherSummary.ER}</td><td>{pitcherSummary.HR}</td>
+                <td>{pitcherSummary.SO}</td><td>{pitcherSummary.K9}</td><td>{pitcherSummary.BB}</td><td>{pitcherSummary.BB9}</td><td>{pitcherSummary.WHIP}</td>
+                <td colSpan={5}></td>
+              </tr>
             </tbody>
           </table>
         ) : (

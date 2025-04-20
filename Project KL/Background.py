@@ -103,7 +103,7 @@ def receive_selected_player():
     print(f"收到前端傳來的球員: {player_id}")
     
     query = """
-    SELECT Name, Year, Team, Type, PA, AB, H, H2, H3, HR, RBL, SO, BB, SB, CS, 
+    SELECT Name, Year, Team, Type, PA, AB, H, H2, H3, HR, RBI, SO, BB, SB, CS, 
            AVG, OBP, SLG, OPS, Chase, Whiff, GB, FB, GF, Sprint,
            AVGZ1, AVGZ2, AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, 
            AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD 

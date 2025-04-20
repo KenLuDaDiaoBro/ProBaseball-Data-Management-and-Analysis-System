@@ -61,7 +61,7 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 H2 = player.get("2B") or 0
                                 H3 = player.get("3B") or 0
                                 HR = player.get("HR") or 0
-                                RBL = player.get("RBL") or 0
+                                RBI = player.get("RBI") or 0
                                 SO = player.get("SO") or 0
                                 BB = player.get("BB") or 0
                                 SB = player.get("SB") or 0
@@ -93,13 +93,13 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 
                                 # 🔹 插入資料
                                 cursor.execute(f"""
-                                    INSERT INTO {table_name} (NUM, Name, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBL,
+                                    INSERT INTO {table_name} (NUM, Name, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBI,
                                     SO, BB, SB, CS, AVG, OBP, SLG, OPS, Chase, Whiff, GB, FB, GF, Sprint, AVGZ1, AVGZ2,
                                     AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD) 
                                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                                """, (NUM, Player, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBL,
+                                """, (NUM, Player, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBI,
                                       SO, BB, SB, CS, AVG, OBP, SLG, OPS, CH, WH, GB, FB, GF, Sprint, AVGZ1, AVGZ2,
                                       AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD))
 

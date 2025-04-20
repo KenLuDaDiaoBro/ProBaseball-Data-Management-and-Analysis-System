@@ -391,14 +391,23 @@ button:focus-visible {
   font-weight: 600;
 }
 
-.player-detail-stats-table tr:hover {
-  background-color: #f9f9f9;
+.player-detail-stats-table tr {
+  background-color: white;
+}
+
+.player-detail-stats-table tr.team-row {
+  background-color:rgb(225, 233, 243);
 }
 
 .player-detail-stats-table td:nth-child(2),
 .player-detail-stats-table th:nth-child(2) {
   min-width: 80px; /* 可視情況調整，例如 100px */
   white-space: nowrap;
+}
+
+.summary-row {
+  background-color: #f0fdf4;
+  font-weight: bold;
 }
 
 /* ========== 按鈕 ========== */
