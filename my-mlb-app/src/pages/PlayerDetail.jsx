@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import StatGauge from "./StatGauge";
 import {
   CircularProgressbarWithChildren,
   buildStyles
@@ -16,7 +15,14 @@ function PlayerDetail() {
   const [filteredPlayers, setFilteredPlayers] = useState([]); // 篩選後的球員
   const [allPlayersData, setAllPlayersData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
-  const [loadedYears, setLoadedYears] = useState(new Set());
+  const updatedStats = [...playerData];
+  const yearsWithTeams = useMemo(() => {
+    return new Set(
+      playerData
+        .filter((stat) => stat.Team && stat.Team.includes("Teams"))
+        .map((stat) => stat.Year)
+    );
+  }, [playerData]);
 
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/selected_player", {
@@ -54,16 +60,33 @@ function PlayerDetail() {
 
   // 搜尋功能
   useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredPlayers([]); // 搜尋欄為空則清空建議列表
-    } else {
-      const results = players
-        .filter((player) =>
-          player.Name.toLowerCase().includes(searchTerm.trim().toLowerCase())
-        )
-        .slice(0, 5); // 只顯示前 5 個結果
-      setFilteredPlayers(results);
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) {
+      setFilteredPlayers([]);
+      return;
     }
+  
+    const scored = players
+      .map((player) => {
+        const name = player.Name.toLowerCase();
+        let score = 0;
+        // 完全開頭吻合 +2 分
+        if (name.startsWith(term)) score += 2;
+        // 任何位置包含 +1 分
+        else if (name.includes(term)) score += 1;
+        return { ...player, score };
+      })
+      .filter((p) => p.score > 0) // 只留下有分數的
+      .sort((a, b) => {
+        // 先比分數
+        if (b.score !== a.score) return b.score - a.score;
+        // 分數相同就比字母序
+        return a.Name.localeCompare(b.Name);
+      })
+      .slice(0, 5)        // 只要前 5 名
+      .map(({ score, ...p }) => p);
+  
+    setFilteredPlayers(scored);
   }, [searchTerm, players]);
 
   // 選擇球員時自動跳轉
@@ -140,10 +163,16 @@ function PlayerDetail() {
   const getBatterSummary = () => {
     const summary = {
       PA: 0, AB: 0, H: 0, H2: 0, H3: 0, HR: 0, RBI: 0, SO: 0,
-      BB: 0, SB: 0, CS: 0, AVG: 0, OBP: 0, SLG: 0, OPS: 0, count: 0
+      BB: 0, SB: 0, CS: 0, AVG: 0, OBP: 0, SLG: 0, OPS: 0,
+      Chase: 0, Whiff: 0, GB: 0, FB: 0, GF: 0
     };
   
     playerData.forEach(stat => {
+      summary.Chase += parseFloat(stat.Chase) * Number(stat.PA) || 0;
+      summary.Whiff += parseFloat(stat.Whiff) * Number(stat.PA) || 0;
+      summary.GB += parseFloat(stat.GB) * Number(stat.PA) || 0;
+      summary.FB += parseFloat(stat.FB) * Number(stat.PA) || 0;
+
       if (stat.Team && stat.Team.includes("Team")) return;
   
       summary.PA += Number(stat.PA) || 0;
@@ -164,42 +193,81 @@ function PlayerDetail() {
     summary.OBP = (summary.OBP / summary.PA).toFixed(3);
     summary.SLG = ((summary.H + summary.H2 + 2 * summary.H3 + 3 * summary.HR) / summary.AB).toFixed(3) || 0;
     summary.OPS = (Number(summary.OBP) + Number(summary.SLG)).toFixed(3) || 0;
+    summary.Chase = (summary.Chase / summary.PA).toFixed(1);
+    summary.Whiff = (summary.Whiff / summary.PA).toFixed(1);
+    summary.GB = (summary.GB / summary.PA).toFixed(1);
+    summary.FB = (summary.FB / summary.PA).toFixed(1);
+    summary.GF = (summary.GB / summary.FB).toFixed(2);
   
     return summary;
   };
   
+  function parseIP(ipStr) {
+    const ip = parseFloat(ipStr);
+    if (isNaN(ip)) return 0;
+  
+    const fullInnings = Math.floor(ip);
+    const outs = Math.round((ip - fullInnings) * 10);
+
+    return fullInnings * 3 + outs;
+  }
+
+  function formatIPFromOuts(outs) {
+    const innings = Math.floor(outs / 3);
+    const remainingOuts = outs % 3;
+    return `${innings}.${remainingOuts}`;
+  }
+  
   const getPitcherSummary = () => {
     const summary = {
       W: 0, L: 0, ERA: 0, IP: 0, H: 0, R: 0, ER: 0, HR: 0,
-      SO: 0, K9: 0, BB: 0, BB9: 0, WHIP: 0, count: 0
+      SO: 0, K9: 0, BB: 0, BB9: 0, WHIP: 0, Chase: 0,
+      Whiff: 0, GB: 0, FB: 0, GF: 0
     };
   
     playerData.forEach(stat => {
+      summary.Chase += parseFloat(stat.Chase) * parseIP(stat.IP) || 0;
+      summary.Whiff += parseFloat(stat.Whiff) * parseIP(stat.IP) || 0;
+      summary.GB += parseFloat(stat.GB) * parseIP(stat.IP) || 0;
+      summary.FB += parseFloat(stat.FB) * parseIP(stat.IP) || 0;
+
       if (stat.Team && stat.Team.includes("Team")) return;
-  
+
       summary.W += Number(stat.W) || 0;
       summary.L += Number(stat.L) || 0;
-      summary.ERA += parseFloat(stat.ERA) || 0;
-      summary.IP += Number(stat.IP) * 3 + (parseFloat(stat.IP) - Number(stat.IP)) * 10 || 0;
+      summary.IP += parseIP(stat.IP) || 0;
       summary.H += Number(stat.H) || 0;
       summary.R += Number(stat.R) || 0;
       summary.ER += Number(stat.ER) || 0;
       summary.HR += Number(stat.HR) || 0;
       summary.SO += Number(stat.SO) || 0;
-      summary.K9 += parseFloat(stat.K9) || 0;
       summary.BB += Number(stat.BB) || 0;
-      summary.BB9 += parseFloat(stat.BB9) || 0;
-      summary.WHIP += parseFloat(stat.WHIP) || 0;
-      summary.count += 1;
+      summary.WHIP += parseFloat(stat.WHIP) * parseIP(stat.IP) / 3 || 0;
     });
   
-    summary.ERA = (summary.ERA / summary.count).toFixed(2);
-    summary.K9 = (summary.K9 / summary.count).toFixed(2);
-    summary.BB9 = (summary.BB9 / summary.count).toFixed(2);
-    summary.WHIP = (summary.WHIP / summary.count).toFixed(2);
+    summary.ERA = (summary.ER / summary.IP * 27).toFixed(2);
+    summary.K9 = (summary.SO / summary.IP * 27).toFixed(2);
+    summary.BB9 = (summary.BB / summary.IP * 27).toFixed(2);
+    summary.WHIP = (summary.WHIP / summary.IP * 3).toFixed(2);
+    summary.Chase = (summary.Chase / summary.IP).toFixed(1);
+    summary.Whiff = (summary.Whiff / summary.IP).toFixed(1);
+    summary.GB = (summary.GB / summary.IP).toFixed(1);
+    summary.FB = (summary.FB / summary.IP).toFixed(1);
+    summary.IP = formatIPFromOuts(summary.IP);
+    summary.GF = (summary.GB / summary.FB).toFixed(2);
   
     return summary;
   };
+
+  updatedStats.forEach(r => {
+    if (yearsWithTeams.has(r.Year) && !r.Team.includes("Teams")) {
+      r.Chase = "/";
+      r.Whiff = "/";
+      r.GB = "/";
+      r.FB = "/";
+      r.GF = "/";
+    }
+  });
 
   if (!playerData.length) return <p>Loading player stats...</p>;
 
@@ -289,11 +357,11 @@ function PlayerDetail() {
               ))}
               <tr className="summary-row">
                 <td colSpan={2}>Career</td>
-                <td>{batterSummary.PA}</td><td>{batterSummary.AB}</td><td>{batterSummary.H}</td>
-                <td>{batterSummary.H2}</td><td>{batterSummary.H3}</td><td>{batterSummary.HR}</td><td>{batterSummary.RBI}</td><td>{batterSummary.SO}</td>
-                <td>{batterSummary.BB}</td><td>{batterSummary.SB}</td><td>{batterSummary.CS}</td><td>{batterSummary.AVG}</td><td>{batterSummary.OBP}</td>
-                <td>{batterSummary.SLG}</td><td>{batterSummary.OPS}</td>
-                <td colSpan={6}></td>
+                <td>{batterSummary.PA}</td><td>{batterSummary.AB}</td><td>{batterSummary.H}</td><td>{batterSummary.H2}</td><td>{batterSummary.H3}</td>
+                <td>{batterSummary.HR}</td><td>{batterSummary.RBI}</td><td>{batterSummary.SO}</td><td>{batterSummary.BB}</td><td>{batterSummary.SB}</td>
+                <td>{batterSummary.CS}</td><td>{batterSummary.AVG}</td><td>{batterSummary.OBP}</td><td>{batterSummary.SLG}</td><td>{batterSummary.OPS}</td>
+                <td>{batterSummary.Chase}</td><td>{batterSummary.Whiff}</td><td>{batterSummary.GB}</td><td>{batterSummary.FB}</td><td>{batterSummary.GF}</td>
+                <td>/</td>
               </tr>
             </tbody>
           </table>
@@ -313,15 +381,16 @@ function PlayerDetail() {
                   <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA}</td>
                   <td>{stat.IP}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
                   <td>{stat.SO}</td><td>{stat.K9}</td><td>{stat.BB}</td><td>{stat.BB9}</td><td>{stat.WHIP}</td>
-                  <td>{stat.Chase}</td><td>{stat.Whiff}</td><td>{stat.GB}</td><td>{stat.FB}</td><td>{stat.GF}</td>
+                  <td>{yearsWithTeams.has(stat.Year) && !stat.Team.includes("Teams") ? "/" : stat.Chase}</td>
+                  <td>{stat.Whiff}</td><td>{stat.GB}</td><td>{stat.FB}</td><td>{stat.GF}</td>
                 </tr>
               ))}
               <tr className="summary-row">
                 <td colSpan={2}>Career</td>
-                <td>{pitcherSummary.W}</td><td>{pitcherSummary.L}</td><td>{pitcherSummary.ERA}</td>
-                <td>{pitcherSummary.IP}</td><td>{pitcherSummary.H}</td><td>{pitcherSummary.R}</td><td>{pitcherSummary.ER}</td><td>{pitcherSummary.HR}</td>
-                <td>{pitcherSummary.SO}</td><td>{pitcherSummary.K9}</td><td>{pitcherSummary.BB}</td><td>{pitcherSummary.BB9}</td><td>{pitcherSummary.WHIP}</td>
-                <td colSpan={5}></td>
+                <td>{pitcherSummary.W}</td><td>{pitcherSummary.L}</td><td>{pitcherSummary.ERA}</td><td>{pitcherSummary.IP}</td><td>{pitcherSummary.H}</td>
+                <td>{pitcherSummary.R}</td><td>{pitcherSummary.ER}</td><td>{pitcherSummary.HR}</td><td>{pitcherSummary.SO}</td><td>{pitcherSummary.K9}</td>
+                <td>{pitcherSummary.BB}</td><td>{pitcherSummary.BB9}</td><td>{pitcherSummary.WHIP}</td><td>{pitcherSummary.Chase}</td><td>{pitcherSummary.Whiff}</td>
+                <td>{pitcherSummary.GB}</td><td>{pitcherSummary.FB}</td><td>{pitcherSummary.GF}</td>
               </tr>
             </tbody>
           </table>

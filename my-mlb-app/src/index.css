@@ -399,10 +399,10 @@ button:focus-visible {
   background-color:rgb(225, 233, 243);
 }
 
-.player-detail-stats-table td:nth-child(2),
-.player-detail-stats-table th:nth-child(2) {
-  min-width: 80px; /* 可視情況調整，例如 100px */
-  white-space: nowrap;
+.player-detail-stats-table tr.team-row td:nth-child(2),
+.player-detail-stats-table tr.team-row th:nth-child(2) {
+  min-width: 80px;
+  white-space: nowrap; /* 不換行 */
 }
 
 .summary-row {

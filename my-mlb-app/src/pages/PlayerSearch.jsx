@@ -5,7 +5,6 @@ function PlayerSearch() {
   const [players, setPlayers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPlayers, setFilteredPlayers] = useState([]);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,43 +15,45 @@ function PlayerSearch() {
   }, []);
 
   useEffect(() => {
-    if (searchTerm === "") {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) {
       setFilteredPlayers([]);
-    } else {
-      const results = players
-        .filter((player) =>
-          player.Name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        .slice(0, 5);
-      setFilteredPlayers(results);
-    }
-  }, [searchTerm, players]);
-
-  const handleSelectPlayer = (player) => {
-    setSearchTerm(player.Name);
-    setSelectedPlayer(player);
-    setFilteredPlayers([]);
-  };
-
-  const sendPlayerToBackend = () => {
-    if (!selectedPlayer) {
-      alert("請選擇一位球員！");
       return;
     }
 
+    const scored = players
+      .map((player) => {
+        const name = player.Name.toLowerCase();
+        let score = 0;
+        if (name.startsWith(term)) score += 2;
+        else if (name.includes(term)) score += 1;
+        return { ...player, score };
+      })
+      .filter((p) => p.score > 0)
+      .sort((a, b) =>
+        b.score !== a.score
+          ? b.score - a.score
+          : a.Name.localeCompare(b.Name)
+      )
+      .slice(0, 5)
+      .map(({ score, ...p }) => p);
+
+    setFilteredPlayers(scored);
+  }, [searchTerm, players]);
+
+  // 點選建議後直接發送並跳轉
+  const handleSelectPlayer = (player) => {
     fetch("http://127.0.0.1:5000/api/selected_player", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: selectedPlayer.id }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: player.id }),
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.error) {
           alert(`錯誤: ${data.error}`);
         } else {
-          navigate(`/playerDetail/${selectedPlayer.id}`);
+          navigate(`/playerDetail/${player.id}`);
         }
       })
       .catch((error) => console.error("Error sending player:", error));
@@ -95,19 +96,6 @@ function PlayerSearch() {
               </li>
             ))}
           </ul>
-        )}
-
-        <button
-          className="player-search-submit-button"
-          onClick={sendPlayerToBackend}
-        >
-          Submit
-        </button>
-
-        {selectedPlayer && (
-          <p className="player-search-selected-player">
-            已選擇: {selectedPlayer.Name} (ID: {selectedPlayer.id})
-          </p>
         )}
       </div>
     </div>
