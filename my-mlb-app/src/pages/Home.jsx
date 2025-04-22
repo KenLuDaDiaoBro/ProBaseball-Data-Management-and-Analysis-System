@@ -5,9 +5,11 @@ function Home() {
     <div className="home-container">
       <h1 className="home-title">Welcome to MLB Player Search</h1>
 
-      <Link to="/search">
-        <button className="home-nav-button">Player Search</button>
-      </Link>
+      <div className="home-buttons" style={{ display: 'flex', gap: '1rem' }}>
+        <Link to="/search">
+          <button className="home-nav-button">Search</button>
+        </Link>
+      </div>
     </div>
   );
 }

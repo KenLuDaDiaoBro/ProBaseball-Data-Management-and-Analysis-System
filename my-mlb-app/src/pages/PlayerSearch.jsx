@@ -1,67 +1,89 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function PlayerSearch() {
   const [players, setPlayers] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredPlayers, setFilteredPlayers] = useState([]);
+  const [filteredOptions, setFilteredOptions] = useState([]);
   const navigate = useNavigate();
 
+  // 拉球員
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/players")
-      .then((response) => response.json())
-      .then((data) => setPlayers(data))
-      .catch((error) => console.error("Error fetching players:", error));
+      .then((r) => r.json())
+      .then(setPlayers)
+      .catch(console.error);
   }, []);
 
+  // 拉球隊
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/api/teams")
+      .then((r) => r.json())
+      .then(setTeams)
+      .catch(console.error);
+  }, []);
+
+  // 打分＋合併＋排序＋Top5
   useEffect(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) {
-      setFilteredPlayers([]);
+      setFilteredOptions([]);
       return;
     }
 
-    const scored = players
-      .map((player) => {
-        const name = player.Name.toLowerCase();
-        let score = 0;
-        if (name.startsWith(term)) score += 2;
-        else if (name.includes(term)) score += 1;
-        return { ...player, score };
+    const scoreList = (items, keyGetter, type) =>
+      items
+        .map((it) => {
+          const key = keyGetter(it).toLowerCase();
+          let score = 0;
+          if (key.startsWith(term)) score += 2;
+          else if (key.includes(term)) score += 1;
+          return { ...it, score, type };
+        })
+        .filter((it) => it.score > 0);
+
+    const scoredPlayers = scoreList(players, (p) => p.Name, "player");
+    const scoredTeams   = scoreList(teams,   (t) => t.code,  "team");
+
+    const combined = [...scoredPlayers, ...scoredTeams]
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        const aKey = a.type === "player" ? a.Name : a.code;
+        const bKey = b.type === "player" ? b.Name : b.code;
+        return aKey.localeCompare(bKey);
       })
-      .filter((p) => p.score > 0)
-      .sort((a, b) =>
-        b.score !== a.score
-          ? b.score - a.score
-          : a.Name.localeCompare(b.Name)
-      )
       .slice(0, 5)
-      .map(({ score, ...p }) => p);
+      .map(({ score, ...rest }) => rest);
 
-    setFilteredPlayers(scored);
-  }, [searchTerm, players]);
+    setFilteredOptions(combined);
+  }, [searchTerm, players, teams]);
 
-  // 點選建議後直接發送並跳轉
-  const handleSelectPlayer = (player) => {
-    fetch("http://127.0.0.1:5000/api/selected_player", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: player.id }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.error) {
-          alert(`錯誤: ${data.error}`);
-        } else {
-          navigate(`/playerDetail/${player.id}`);
-        }
+  // 點選建議
+  const handleSelect = (opt) => {
+    if (opt.type === "player") {
+      // 舊流程：選球員
+      fetch("http://127.0.0.1:5000/api/selected_player", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: opt.id }),
       })
-      .catch((error) => console.error("Error sending player:", error));
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.error) alert(data.error);
+          else navigate(`/playerDetail/${opt.id}`);
+        })
+        .catch(console.error);
+    } else {
+      // 新流程：選球隊
+      navigate(`/team/${opt.code}`);
+    }
+    setSearchTerm("");
+    setFilteredOptions([]);
   };
 
   return (
     <div className="player-search-wrap">
-      {/* 導航區 */}
       <div className="navigation-icons">
         <button className="back-button" onClick={() => navigate(-1)}>←</button>
         <img
@@ -72,27 +94,25 @@ function PlayerSearch() {
         />
       </div>
 
-      {/* 搜尋區 */}
       <div className="player-search-container">
-        <h2>Search a Player</h2>
-
+        <h2>Search</h2>
         <input
           type="text"
           className="player-search-input"
-          placeholder="Enter player name..."
+          placeholder="Enter name or team code..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        {filteredPlayers.length > 0 && (
+        {filteredOptions.length > 0 && (
           <ul className="player-search-suggestions">
-            {filteredPlayers.map((player, index) => (
+            {filteredOptions.map((opt, i) => (
               <li
-                key={index}
+                key={i}
                 className="player-search-suggestion-item"
-                onClick={() => handleSelectPlayer(player)}
+                onClick={() => handleSelect(opt)}
               >
-                {player.Name}
+                {opt.type === "player" ? opt.Name : opt.code}
               </li>
             ))}
           </ul>

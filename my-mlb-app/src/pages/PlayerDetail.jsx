@@ -12,7 +12,8 @@ function PlayerDetail() {
   const [playerData, setPlayerStats] = useState([]); // 存儲球員數據
   const [searchTerm, setSearchTerm] = useState(""); // 存儲搜尋關鍵字
   const [players, setPlayers] = useState([]); // 存儲所有球員列表
-  const [filteredPlayers, setFilteredPlayers] = useState([]); // 篩選後的球員
+  const [teams, setTeams] = useState([]);
+  const [filteredOptions, setFilteredOptions] = useState([]);
   const [allPlayersData, setAllPlayersData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
   const updatedStats = [...playerData];
@@ -58,43 +59,68 @@ function PlayerDetail() {
       .catch((error) => console.error("Error fetching players:", error));
   }, []);
 
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/api/teams")
+      .then((res) => res.json())
+      .then((data) => setTeams(data))   // data = [{ code: 'LAD', name: 'Los Angeles Dodgers' }, ...]
+      .catch(console.error);
+  }, []);
+
   // 搜尋功能
   useEffect(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) {
-      setFilteredPlayers([]);
+      setFilteredOptions([]);
       return;
     }
   
-    const scored = players
-      .map((player) => {
-        const name = player.Name.toLowerCase();
+    // 1. 球員打分
+    const scoredPlayers = players
+      .map((p) => {
+        const name = p.Name.toLowerCase();
         let score = 0;
-        // 完全開頭吻合 +2 分
         if (name.startsWith(term)) score += 2;
-        // 任何位置包含 +1 分
         else if (name.includes(term)) score += 1;
-        return { ...player, score };
+        return { ...p, score, type: 'player' };
       })
-      .filter((p) => p.score > 0) // 只留下有分數的
-      .sort((a, b) => {
-        // 先比分數
-        if (b.score !== a.score) return b.score - a.score;
-        // 分數相同就比字母序
-        return a.Name.localeCompare(b.Name);
-      })
-      .slice(0, 5)        // 只要前 5 名
-      .map(({ score, ...p }) => p);
+      .filter((p) => p.score > 0);
   
-    setFilteredPlayers(scored);
-  }, [searchTerm, players]);
+    // 2. 球隊打分
+    const scoredTeams = teams
+      .map((t) => {
+        const code = t.code.toLowerCase();
+        let score = 0;
+        if (code.startsWith(term)) score += 2;
+        else if (code.includes(term)) score += 1;
+        return { ...t, score, type: 'team' };
+      })
+      .filter((t) => t.score > 0);
+  
+    // 3. 合併、排序、取前 5
+    const combined = [...scoredPlayers, ...scoredTeams]
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        // 同分就按名字/代號
+        const aKey = a.type === 'player' ? a.Name : a.code;
+        const bKey = b.type === 'player' ? b.Name : b.code;
+        return aKey.localeCompare(bKey);
+      })
+      .slice(0, 5)
+      .map(({ score, ...rest }) => rest);
+  
+    setFilteredOptions(combined);
+  }, [searchTerm, players, teams]);
 
-  // 選擇球員時自動跳轉
-  const handleSelectPlayer = (player) => {
-    setSearchTerm(""); // 清空搜尋框
-    setFilteredPlayers([]);
-    navigate(`/playerDetail/${player.id}`); // 直接跳轉
-  };
+  // 選擇下拉選項 (player 或 team) 時跳轉
+ const handleSelectOption = (opt) => {
+   setSearchTerm("");
+   setFilteredOptions([]);      // ← 這裡清空 filteredOptions
+   if (opt.type === "player") {
+    navigate(`/playerDetail/${opt.id}`);
+   } else {
+    navigate(`/team/${opt.code}`);
+   }
+ };
 
   useEffect(() => {
     if (selectedYear) {
@@ -285,15 +311,19 @@ function PlayerDetail() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="player-detail-search-input"
         />
-        {filteredPlayers.length > 0 && (
-          <ul className="player-detail-suggestions">
-            {filteredPlayers.map((player) => (
-              <li key={player.id} onClick={() => handleSelectPlayer(player)}>
-                {player.Name}
-              </li>
+        {filteredOptions.length > 0 && (
+          <ul className="player-search-suggestions">
+            {filteredOptions.map((opt, i) => (
+              <li
+                key={i}
+                className="player-search-suggestion-item"
+                onClick={() => handleSelectOption(opt)}  // ← 呼叫改成 handleSelectOption
+              >
+                {opt.type === "player" ? opt.Name : opt.code}
+             </li>
             ))}
           </ul>
-        )}
+       )}
       </div>
 
       <h1 className="player-detail-player-name">

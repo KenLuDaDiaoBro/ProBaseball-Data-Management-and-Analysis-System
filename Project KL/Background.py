@@ -40,6 +40,35 @@ def get_players():
     except mysql.connector.Error as err:
         print("Database error:", err)
         return jsonify({"error": "Database connection failed"}), 500
+    
+@app.route("/api/teams", methods=["GET"])
+def get_teams():
+    """回傳所有在 pitcher/batter 兩張表中出現過且不含 'Teams' 的 distinct Team 代號"""
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 取 pitcher, batter 兩張表的所有 distinct Team，並做 union
+        cursor.execute(
+            "SELECT DISTINCT Team FROM pitcher "
+            "UNION "
+            "SELECT DISTINCT Team FROM batter;"
+        )
+        rows = cursor.fetchall()
+
+        # 把空值、含 'Teams' 的字串過濾掉，然後去重排序
+        codes = sorted({
+            r[0] for r in rows
+            if r[0] and "Teams" not in r[0]
+        })
+
+        cursor.close()
+        conn.close()
+
+        return jsonify([{"code": c, "name": c} for c in codes])
+    except mysql.connector.Error as err:
+        print("Database error in /api/teams:", err)
+        return jsonify({"error": "Database connection failed"}), 500
 
 @app.route('/api/players_stats', methods=['GET'])
 def get_all_players_stats():
