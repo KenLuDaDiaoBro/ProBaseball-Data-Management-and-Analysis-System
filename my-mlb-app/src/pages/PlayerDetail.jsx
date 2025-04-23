@@ -139,9 +139,6 @@ function PlayerDetail() {
     if (!players.length || !playerData.length || !allPlayersData.length) return [];
   
     const current = playerData.find((p) => Number(p.Year) === Number(selectedYear));
-    console.log("🧪 current:", current);
-    console.log("📅 selectedYear:", selectedYear);
-    console.log("🧮 allPlayersData sample:", allPlayersData.slice(0, 5));
     const type = current.Type;
   
     if (!current || !type) return [];
@@ -168,10 +165,6 @@ function PlayerDetail() {
       const sorted = [...allValues].sort((a, b) => isLowerBetter ? a - b : b - a);
       const rank = sorted.findIndex(val => val === currentValue);
       const percent = rank === -1 ? 0 : Math.round(((sorted.length - rank) / sorted.length) * 100);
-
-      console.log(current)
-      
-      console.log("📊 field:", fields, "currentValue:", currentValue, "allValues:", allValues);
   
       return { field, value: currentValue, percent };
     });
@@ -306,7 +299,7 @@ function PlayerDetail() {
       <div className="player-detail-search-box">
         <input
           type="text"
-          placeholder="Search for a player..."
+          placeholder="Search for a player or a team..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="player-detail-search-input"
@@ -390,7 +383,7 @@ function PlayerDetail() {
                   <td>{stat.Sprint.toFixed(1)}</td>
                 </tr>
               ))}
-              <tr className="summary-row">
+              <tr className="player-detail-summary-row">
                 <td colSpan={2}>Career</td>
                 <td>{batterSummary.PA}</td><td>{batterSummary.AB}</td><td>{batterSummary.H}</td><td>{batterSummary.H2}</td><td>{batterSummary.H3}</td>
                 <td>{batterSummary.HR}</td><td>{batterSummary.RBI}</td><td>{batterSummary.SO}</td><td>{batterSummary.BB}</td><td>{batterSummary.SB}</td>
@@ -423,7 +416,7 @@ function PlayerDetail() {
                   <td>{isNaN(parseFloat(stat.GF)) ? stat.GF : parseFloat(stat.GF).toFixed(2)}</td>
                 </tr>
               ))}
-              <tr className="summary-row">
+              <tr className="player-detail-summary-row">
                 <td colSpan={2}>Career</td>
                 <td>{pitcherSummary.W}</td><td>{pitcherSummary.L}</td><td>{pitcherSummary.ERA}</td><td>{pitcherSummary.IP}</td><td>{pitcherSummary.H}</td>
                 <td>{pitcherSummary.R}</td><td>{pitcherSummary.ER}</td><td>{pitcherSummary.HR}</td><td>{pitcherSummary.SO}</td><td>{pitcherSummary.K9}</td>

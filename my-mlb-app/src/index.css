@@ -123,86 +123,90 @@ button:focus-visible {
 /* ============================= */
 
 /* 外層容器，讓內容置中 */
-.player-search-wrap{
-  width: 100vw; /* 佔滿整個視窗寬度 */
-  height: 100vh; /* 佔滿整個視窗高度 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background-color: #f8f9fa; /* 設定背景色 */
-  margin:0 auto;
+.player-search-body {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  z-index: 1000;
+  box-sizing: border-box;
 }
 
-/* 搜尋容器 */
-.player-search-container {
-  max-width: 400px;
-  margin: 50px auto;
-  padding: 20px;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-/* 搜尋框 */
+/* 搜尋框本身 */
 .player-search-input {
-  width: 90%;
-  padding: 10px;
+  position:relative;
+  left:5px;
+  width: 100%;
+  padding: 12px;
   font-size: 16px;
   border: 2px solid #007bff;
-  border-radius: 5px;
+  border-radius: 8px;
   outline: none;
+  box-sizing: border-box;
 }
 
-/* 搜尋建議列表 */
+/* 讓建議清單跳脫文流，絕對定位在 input 下方 */
 .player-search-suggestions {
-  list-style: none;
+  position: absolute;           /* ← 這行要加上 */
+  top: calc(100% + 8px);        /* 緊貼 input 正下方 */
+  left: 0;                      
+  width: 100%;                  /* 撐滿 wrapper */
+  margin: 0;
   padding: 0;
-  margin-top: 10px;
-  background: white;
+  list-style: none;
+  
+  background: #fff;
   border: 1px solid #ddd;
   border-radius: 5px;
-  max-height: 150px;
-  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+  max-height: calc(5 * 45px);   /* 高度剛好塞 5 筆 */
+  overflow: hidden;             /* 超出隱藏，不顯示 scrollbar */
+  z-index: 1001;
+  text-align: center;
 }
 
-/* 每個建議選項 */
+/* 每一筆選項 */
 .player-search-suggestion-item {
-  padding: 10px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.player-search-suggestion-item:hove {
-  background: #007bff;
-  color: white;
-}
-
-/* 送出按鈕 */
-.player-search-submit-button {
-  margin-top: 15px;
-  padding: 10px 15px;
-  font-size: 16px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.player-search-submit-button:hover {
-  background-color: #218838;
-}
-
-/* 選取的球員名稱 */
-.selected-player {
-  margin-top: 15px;
-  font-size: 18px;
-  font-weight: bold;
+  height: 45px;
+  line-height: 45px;
+  padding: 0 16px;
+  font-size: 15px;
   color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  transition: transform 0.2s ease,
+              background-color 0.2s ease,
+              color 0.2s ease;
+}
+
+/* 奇偶條紋 */
+.player-search-suggestions li:nth-child(odd) {
+  background: #f9f9f9;
+}
+
+/* hover 效果 */
+.player-search-suggestion-item:hover {
+  transform: scale(1.05);
+  background-color: #007bff !important;
+  color: #fff !important;
+  z-index: 10;
+}
+
+.player-search-title {
+  display: block;
+  width: 250px;        /* 和输入框同宽 */
+  margin: 0 auto 8px;  /* 底部留一点空隙 */
+  font-size: 48px;
+  font-weight: 700;
+  text-align: center;
+  
+  /* 往上微调 */
+  position: relative;
+  top: -110px;          /* 你可以把 20 改成自己想要的数值 */
 }
 
 /* ============================= */
@@ -281,7 +285,7 @@ button:focus-visible {
 
 .player-detail-search-suggestions li {
   height: 45px;
-  line-height: 42px;
+  line-height: 45px;
   padding: 0 16px;
   font-size: 14px;
   color: #333;
@@ -306,6 +310,7 @@ button:focus-visible {
   background: #007bff;
   color: #fff;
   font-weight: 700;
+  transform: scale(1.05);
 }
 
 /* ========== 標題 ========== */
@@ -429,8 +434,88 @@ button:focus-visible {
   white-space: nowrap; /* 不換行 */
 }
 
-.summary-row {
-  background-color: #f0fdf4;
+.player-detail-summary-row {
+  background-color: #f0fdf4 !important;
+  font-weight: bold;
+}
+
+/* ============================= */
+/* ====== TeamDetail 頁面 ====== */
+/* ============================= */
+.team-detail-container {
+  position: relative;
+  padding: 20px;
+  background: #f8f9fa;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.team-detail-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.team-detail-year-select-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 10px;
+}
+
+.team-detail-year-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.team-detail-year-dropdown {
+  padding: 6px 12px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.team-detail-stats-wrapper {
+  width: 90%;
+  max-width: 1000px;
+  margin: 0 auto 40px;
+}
+
+.team-detail-subtitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 20px 0 10px;
+  color: #555;
+  text-align: left;
+}
+
+.team-detail-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.team-detail-stats-table th,
+.team-detail-stats-table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.team-detail-stats-table th {
+  background: #007bff;
+  color: #fff;
+  font-weight: 600;
+}
+
+.team-detail-summary-row {
+  background-color: #f0fdf4 !important;
   font-weight: bold;
 }
 

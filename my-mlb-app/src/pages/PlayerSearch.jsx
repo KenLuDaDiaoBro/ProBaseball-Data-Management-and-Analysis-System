@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 import { useNavigate } from "react-router-dom";
 
 function PlayerSearch() {
@@ -62,7 +62,6 @@ function PlayerSearch() {
   // 點選建議
   const handleSelect = (opt) => {
     if (opt.type === "player") {
-      // 舊流程：選球員
       fetch("http://127.0.0.1:5000/api/selected_player", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,7 +74,6 @@ function PlayerSearch() {
         })
         .catch(console.error);
     } else {
-      // 新流程：選球隊
       navigate(`/team/${opt.code}`);
     }
     setSearchTerm("");
@@ -94,12 +92,13 @@ function PlayerSearch() {
         />
       </div>
 
-      <div className="player-search-container">
-        <h2>Search</h2>
+      {/* 新增一層只包 input + suggestions 的 wrapper */}
+      <div className="player-search-body">
+        <h2 className="player-search-title">Search</h2>
         <input
           type="text"
           className="player-search-input"
-          placeholder="Enter name or team code..."
+          placeholder="Search for a player or a team..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />

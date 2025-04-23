@@ -117,6 +117,66 @@ def get_all_players_stats():
     except mysql.connector.Error as err:
         print("Database error:", err)
         return jsonify({"error": "Database connection failed"}), 500
+    
+@app.route('/api/team_stats', methods=['GET'])
+def get_team_stats():
+    team = request.args.get('team')
+    if not team:
+        return jsonify({"error": "No team code provided"}), 400
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 打者數據
+        batter_query = """
+            SELECT 
+              Year, Team, Type, PA, AB, H, H2, H3, HR, RBI, SO, BB, SB, CS,
+              AVG, OBP, SLG, OPS, Chase, Whiff, GB, FB, GF, Sprint
+            FROM batter
+            WHERE Team = %s
+            ORDER BY Year ASC;
+        """
+        cursor.execute(batter_query, (team,))
+        batters = cursor.fetchall()
+
+        # 投手數據，並同時計算 K9 / BB9
+        pitcher_query = """
+            SELECT
+              Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, SO, WHIP,
+              -- 換算局數後算每九局三振、保送
+              ROUND(
+                SO / NULLIF(
+                  (FLOOR(IP) + ((IP - FLOOR(IP)) * 10 / 3)),
+                  0
+                ) * 9, 2
+              ) AS K9,
+              ROUND(
+                BB / NULLIF(
+                  (FLOOR(IP) + ((IP - FLOOR(IP)) * 10 / 3)),
+                  0
+                ) * 9, 2
+              ) AS BB9,
+              Chase, Whiff, GB, FB, GF
+            FROM pitcher
+            WHERE Team = %s
+            ORDER BY Year ASC;
+        """
+        cursor.execute(pitcher_query, (team,))
+        pitchers = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        # 回傳兩個列表，前端取完再依年分做篩選
+        return jsonify({
+            "batters": batters,
+            "pitchers": pitchers
+        })
+
+    except mysql.connector.Error as err:
+        print("Database error in /api/team_stats:", err)
+        return jsonify({"error": "Database connection failed"}), 500
 
 @app.route('/api/selected_player', methods=['POST'])
 def receive_selected_player():
