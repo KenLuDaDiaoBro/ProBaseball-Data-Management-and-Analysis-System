@@ -13,9 +13,9 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
 # 設定目標球隊
-Teams = ["Yankees"]
+Teams = ["Angels"]
 players_data = []
-Yr = [2024]
+Yr = [2021]
 
 # 設定瀏覽器
 s = Service("C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/chromedriver-win64/chromedriver.exe")
@@ -69,7 +69,7 @@ for Year in Yr:
             for name in Unique_Batters:
                 
                 #跳轉至球員頁面
-                player_link = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f"//td[@class='tr-data align-left']//b[text()='{name}']/parent::a")))
+                player_link = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'//td[@class="tr-data align-left"]//b[text()="{name}"]/parent::a')))
                 player_url = player_link.get_attribute("href")
                 print(f"跳轉至: {player_url}")
                 ID = player_url[45:]
@@ -204,7 +204,7 @@ for Year in Yr:
             
             for name in Unique_Pitchers:
                 #print(name)
-                player_link = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f"//td[@class='tr-data align-left']//b[text()='{name}']/parent::a")))
+                player_link = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'//td[@class="tr-data align-left"]//b[text()="{name}"]/parent::a')))
                 player_url = player_link.get_attribute("href")
                 print(f"跳轉至: {player_url}")
                 ID = player_url[45:]

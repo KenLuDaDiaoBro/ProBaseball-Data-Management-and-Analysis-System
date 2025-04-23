@@ -233,13 +233,12 @@ button:focus-visible {
 .player-detail-search-box {
   position: absolute;
   top: 42px;
-  right: 20px;
+  right: 80px;
   width: 250px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   z-index: 1000;
-  text-align: center;
+  box-sizing: border-box;
 }
 
 .player-detail-search-input {
@@ -249,39 +248,64 @@ button:focus-visible {
   border: 2px solid #007bff;
   border-radius: 8px;
   outline: none;
+  box-sizing: border-box;
+}
+.player-detail-search-input::placeholder {
+  color: #aaa;
+}
+.player-detail-search-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+  background: #fff;
+  outline: none;
 }
 
-.player-detail-suggestions {
+.player-detail-search-suggestions {
   position: absolute;
-  top: 100%;
-  left: -12px;
-  width: 100%;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-height: 250px;
-  overflow-y: auto;
-  z-index: 10;
-  list-style: none;
+  top: calc(100% + 6px);     /* 緊貼 <input> 下面 */
+  left: 0;
+  right: 0;      /* 撐滿 wrapper 的 250px */
+  margin: 0;
   padding: 0;
-  margin: 5px 0;
+  margin-top: 10px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 10;
+  overflow: hidden;
+  max-height: calc(5 * 45px); /* 正好放 5 筆 */
+  text-align: center;
 }
 
-.player-detail-suggestions li {
-  padding: 10px;
+.player-detail-search-suggestions li {
+  height: 45px;
+  line-height: 42px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #333;
   cursor: pointer;
-  transition: background 0.3s;
-  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  /* 新增：粗一點的字重、同樣字型 */
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
 }
 
-.player-detail-suggestions li:last-child {
-  border-bottom: none;
+.player-detail-search-suggestions li:nth-child(odd) {
+  background: #f9f9f9;
 }
 
-.player-detail-suggestions li:hover {
+/* 滑鼠經過 */
+.player-detail-search-suggestions li:hover {
   background: #007bff;
-  color: white;
+  color: #fff;
+  font-weight: 700;
 }
 
 /* ========== 標題 ========== */

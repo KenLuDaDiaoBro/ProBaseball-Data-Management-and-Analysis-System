@@ -11,8 +11,6 @@ conn = mysql.connector.connect(
 )
 cursor = conn.cursor()
 
-NUM = 0
-
 # 🔹 遍歷 Players_Data 目錄
 base_path = "C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/Players_Data"
 if not os.path.exists(base_path):
@@ -44,17 +42,31 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                             continue
 
                         for player in data:
-                            NUM += 1
                             Player = player.get("Player")
                             ID = player.get("ID")
                             Year = player.get("Year")
                             Team = player.get("Team")
                             Division = player.get("Division")
                             Type = player.get("Type")  # batter 或 pitcher
-                            
-                            # 🔹 確認 player_type 並插入對應的 Table
                             if Type == "Batter":
                                 table_name = "batter"
+                            elif Type == "Pitcher":
+                                table_name = "pitcher"
+                            else:
+                                print(f"⚠️ 未知球員類型: {Type}，跳過 {Player}")
+                                continue
+                            
+                            # 🔹 檢查是否已存在相同 ID, Year, Team
+                            cursor.execute(
+                                f"SELECT 1 FROM {table_name} WHERE ID=%s AND Year=%s AND Team=%s LIMIT 1",  
+                                (ID, Year, Team)
+                            )
+                            if cursor.fetchone():
+                                print(f"⚠️ 已存在, 跳過: {Player} ({ID}, {Year}, {Team})")
+                                continue
+                            
+                            # 🔹 確認 player_type 並插入對應的 Table
+                            if table_name == "batter":
                                 PA = player.get("PA") or 0
                                 AB = player.get("AB") or 0
                                 H = player.get("H") or 0
@@ -93,20 +105,19 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 
                                 # 🔹 插入資料
                                 cursor.execute(f"""
-                                    INSERT INTO {table_name} (NUM, Name, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBI,
+                                    INSERT INTO {table_name} (Name, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBI,
                                     SO, BB, SB, CS, AVG, OBP, SLG, OPS, Chase, Whiff, GB, FB, GF, Sprint, AVGZ1, AVGZ2,
                                     AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD) 
-                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                                """, (NUM, Player, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBI,
+                                """, ( Player, ID, Year, Team, Division, Type, PA, AB, H, H2, H3, HR, RBI,
                                       SO, BB, SB, CS, AVG, OBP, SLG, OPS, CH, WH, GB, FB, GF, Sprint, AVGZ1, AVGZ2,
                                       AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD))
 
                                 print(f"✅ 插入 {Player} 到 {table_name}，球隊: {Team}")
 
-                            elif Type == "Pitcher":
-                                table_name = "pitcher"
+                            elif table_name == "pitcher":
                                 W = player.get("Wins") or 0
                                 L = player.get("Losses") or 0
                                 ERA = player.get("ERA") or 0
@@ -140,13 +151,13 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 
                                 # 🔹 插入資料
                                 cursor.execute(f"""
-                                    INSERT INTO {table_name} (NUM, Name, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
+                                    INSERT INTO {table_name} (Name, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
                                     HR, BB, SO, WHIP, Chase, Whiff, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
                                     PZ8, PZ9, PZLU, PZRU, PZLD, PZRD) 
-                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s)
-                                """, (NUM, Player, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
+                                """, (Player, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
                                       HR, BB, SO, WHIP, CH, WH, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
                                       PZ8, PZ9, PZLU, PZRU, PZLD, PZRD))
 

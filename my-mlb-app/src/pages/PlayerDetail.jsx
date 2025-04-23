@@ -312,11 +312,11 @@ function PlayerDetail() {
           className="player-detail-search-input"
         />
         {filteredOptions.length > 0 && (
-          <ul className="player-search-suggestions">
+          <ul className="player-detail-search-suggestions">
             {filteredOptions.map((opt, i) => (
               <li
                 key={i}
-                className="player-search-suggestion-item"
+                className="player-detail-search-suggestion-item"
                 onClick={() => handleSelectOption(opt)}  // ← 呼叫改成 handleSelectOption
               >
                 {opt.type === "player" ? opt.Name : opt.code}
@@ -380,9 +380,14 @@ function PlayerDetail() {
                 <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
                   <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.PA}</td><td>{stat.AB}</td><td>{stat.H}</td>
                   <td>{stat.H2}</td><td>{stat.H3}</td><td>{stat.HR}</td><td>{stat.RBI}</td><td>{stat.SO}</td>
-                  <td>{stat.BB}</td><td>{stat.SB}</td><td>{stat.CS}</td><td>{stat.AVG}</td><td>{stat.OBP}</td>
-                  <td>{stat.SLG}</td><td>{stat.OPS}</td><td>{stat.Chase}</td><td>{stat.Whiff}</td><td>{stat.GB}</td>
-                  <td>{stat.FB}</td><td>{stat.GF}</td><td>{stat.Sprint}</td>
+                  <td>{stat.BB}</td><td>{stat.SB}</td><td>{stat.CS}</td><td>{stat.AVG.toFixed(3)}</td><td>{stat.OBP.toFixed(3)}</td>
+                  <td>{stat.SLG.toFixed(3)}</td><td>{stat.OPS.toFixed(3)}</td>
+                  <td>{isNaN(parseFloat(stat.Chase)) ? stat.Chase : parseFloat(stat.Chase).toFixed(1)}</td>
+                  <td>{isNaN(parseFloat(stat.Whiff)) ? stat.Whiff : parseFloat(stat.Whiff).toFixed(1)}</td>
+                  <td>{isNaN(parseFloat(stat.GB)) ? stat.GB : parseFloat(stat.GB).toFixed(1)}</td>
+                  <td>{isNaN(parseFloat(stat.FB)) ? stat.FB : parseFloat(stat.FB).toFixed(1)}</td>
+                  <td>{isNaN(parseFloat(stat.GF)) ? stat.GF : parseFloat(stat.GF).toFixed(2)}</td>
+                  <td>{stat.Sprint.toFixed(1)}</td>
                 </tr>
               ))}
               <tr className="summary-row">
@@ -408,11 +413,14 @@ function PlayerDetail() {
             <tbody>
               {playerData.map((stat, index) => (
                 <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
-                  <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA}</td>
-                  <td>{stat.IP}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
-                  <td>{stat.SO}</td><td>{stat.K9}</td><td>{stat.BB}</td><td>{stat.BB9}</td><td>{stat.WHIP}</td>
-                  <td>{yearsWithTeams.has(stat.Year) && !stat.Team.includes("Teams") ? "/" : stat.Chase}</td>
-                  <td>{stat.Whiff}</td><td>{stat.GB}</td><td>{stat.FB}</td><td>{stat.GF}</td>
+                  <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA.toFixed(2)}</td>
+                  <td>{stat.IP.toFixed(1)}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
+                  <td>{stat.SO}</td><td>{stat.K9.toFixed(2)}</td><td>{stat.BB}</td><td>{stat.BB9.toFixed(2)}</td><td>{stat.WHIP.toFixed(2)}</td>
+                  <td>{isNaN(parseFloat(stat.Chase)) ? stat.Chase : parseFloat(stat.Chase).toFixed(1)}</td>
+                  <td>{isNaN(parseFloat(stat.Whiff)) ? stat.Whiff : parseFloat(stat.Whiff).toFixed(1)}</td>
+                  <td>{isNaN(parseFloat(stat.GB)) ? stat.GB : parseFloat(stat.GB).toFixed(1)}</td>
+                  <td>{isNaN(parseFloat(stat.FB)) ? stat.FB : parseFloat(stat.FB).toFixed(1)}</td>
+                  <td>{isNaN(parseFloat(stat.GF)) ? stat.GF : parseFloat(stat.GF).toFixed(2)}</td>
                 </tr>
               ))}
               <tr className="summary-row">
