@@ -28,6 +28,8 @@ a:hover {
 }
 
 body {
+  height: 100%;
+  margin: 0;
   font-family: 'Inter', sans-serif;
   display: flex;
   place-items: center;
@@ -443,7 +445,8 @@ button:focus-visible {
 /* ====== TeamDetail 頁面 ====== */
 /* ============================= */
 .team-detail-container {
-  position: relative;
+  width: 100vw;
+  height: 100%;
   padding: 20px;
   background: #f8f9fa;
   min-height: 100vh;
@@ -483,7 +486,7 @@ button:focus-visible {
 
 .team-detail-stats-wrapper {
   width: 90%;
-  max-width: 1000px;
+  min-width: 1000px;
   margin: 0 auto 40px;
 }
 
@@ -495,10 +498,15 @@ button:focus-visible {
   text-align: left;
 }
 
+.team-detail-section {
+  overflow-x: auto;
+}
+
 .team-detail-stats-table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
+  font-size: 12px;
 }
 
 .team-detail-stats-table th,
@@ -506,6 +514,7 @@ button:focus-visible {
   border: 1px solid #ddd;
   padding: 8px 12px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .team-detail-stats-table th {

@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import mysql.connector
+from collections import defaultdict
 
 app = Flask(__name__)
 CORS(app)  # 允許 React 前端請求 API
@@ -131,7 +132,7 @@ def get_team_stats():
         # 打者數據
         batter_query = """
             SELECT 
-              Year, Team, Type, PA, AB, H, H2, H3, HR, RBI, SO, BB, SB, CS,
+              Name, Year, Team, Type, PA, AB, H, H2, H3, HR, RBI, SO, BB, SB, CS,
               AVG, OBP, SLG, OPS, Chase, Whiff, GB, FB, GF, Sprint
             FROM batter
             WHERE Team = %s
@@ -143,7 +144,7 @@ def get_team_stats():
         # 投手數據，並同時計算 K9 / BB9
         pitcher_query = """
             SELECT
-              Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, SO, WHIP,
+              Name, Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, SO, WHIP,
               -- 換算局數後算每九局三振、保送
               ROUND(
                 SO / NULLIF(
@@ -232,6 +233,114 @@ def receive_selected_player():
     conn.close()
 
     return jsonify(player_stats)
+
+@app.route('/api/league_team_stats')
+def league_team_stats():
+    year = request.args.get('year', type=int)
+    if not year:
+        return jsonify({'error': 'year is required'}), 400
+
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # 預先建立所有球隊與索引的對應（可動態抓 distinct Team）
+    cursor.execute("SELECT DISTINCT Team FROM batters WHERE Year = %s", (year,))
+    teams_list = [row['Team'] for row in cursor.fetchall()]
+    team_index = {team: idx for idx, team in enumerate(teams_list)}
+    teams_data = [defaultdict(float) for _ in range(len(teams_list))]
+
+    # -------- 累加打者資料 --------
+    cursor.execute("""
+        SELECT  Team, PA, AB, H, H2, H3, HR, BB, RBI, SO, BB, SB, CS,
+                OBP, Chase, Whiff, GB, FB, GF,
+        FROM batters
+        WHERE Year = %s
+    """, (year,))
+    for row in cursor.fetchall():
+        i = team_index[row['Team']]
+        for k in row:
+            if k != 'Team':
+                teams_data[i][k] += row[k] or 0
+
+    # -------- 累加投手資料 --------
+    cursor.execute("""
+         SELECT Team, W, L, H AS PH, R, ER, HR AS PHR, BB AS PBB, SO AS PSO, WHIP, 
+               Chase AS PCH, Whiff AS PWH, GB AS PGB, FB AS PFB, GF AS PGF,
+               (FLOOR(ANY_VALUE(IP)) * 3 + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10)) AS IP
+        FROM pitchers
+        WHERE Year = %s
+    """, (year,))
+    for row in cursor.fetchall():
+        i = team_index[row['Team']]
+        for k in row:
+            if k != 'Team':
+                teams_data[i][k] += row[k] or 0
+
+    conn.close()
+
+    # -------- 統一計算 --------
+    result = []
+    for team, data in zip(teams_list, teams_data):
+        PA = data['PA']
+        AB = data['AB']
+        H = data['H']
+        H2 = data['H2']
+        H3 = data['H3']
+        HR = data['HR']
+        BB = data['BB']
+        RBI = data['RBI']
+        SO = data['SO']
+        BB = data['BB']
+        SB = data['SB']
+        CS = data['CS']
+        OBP = data['OBP']
+        Chase = data['Chase']
+        Whiff = data['Whiff']
+        GB = data['GB']
+        FB = data['FB']
+        GF = data['GF']
+
+        W = data['W']
+        L = data['L']
+        IP = data['IP']
+        PH = data['PH']
+        R = data['R']
+        ER = data['ER']
+        PHR = data['PHR']
+        PBB = data['PBB']
+        PSO = data['PSO']
+        WHIP = data['WHIP']
+        PCH = data['PCH']
+        PWH = data['PWH']
+        PGB = data['PGB']
+        PFB = data['PFB']
+        PGF = data['PGF']
+
+        obp_den = ab + bb + hbp + sf
+        slg_numerator = h + h2 + 2 * h3 + 3 * hr
+
+        obp = (h + bb + hbp) / obp_den if obp_den else 0
+        slg = slg_numerator / ab if ab else 0
+        ops = obp + slg
+
+        era = (er / ip) * 9 if ip else 0
+        whip = (ph + pbb) / ip if ip else 0
+        k9 = (so / ip) * 9 if ip else 0
+        bb9 = (pbb / ip) * 9 if ip else 0
+
+        result.append({
+            "team": team,
+            "AVG": round(h / ab, 3) if ab else 0,
+            "OBP": round(obp, 3),
+            "SLG": round(slg, 3),
+            "OPS": round(ops, 3),
+            "ERA": round(era, 2),
+            "WHIP": round(whip, 2),
+            "K9": round(k9, 2),
+            "BB9": round(bb9, 2),
+        })
+
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(debug=True)
