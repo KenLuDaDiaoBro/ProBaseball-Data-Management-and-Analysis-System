@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { teamColors } from "../constants/teamColors";
+
+const METRICS = ["AVG", "OBP", "SLG", "OPS", "ERA", "WHIP", "K9", "BB9"];
+const ASC = ["ERA", "WHIP", "BB9"];
 
 function TeamDetail() {
   const { code } = useParams();
@@ -9,6 +13,8 @@ function TeamDetail() {
   const [batters, setBatters] = useState([]);
   const [pitchers, setPitchers] = useState([]);
   const [leagueStats, setLeagueStats] = useState([]);
+  const [teamRanks, setTeamRanks] = useState({});
+  const teamColor = teamColors[code];
 
   // 拿整隊統計
   useEffect(() => {
@@ -38,6 +44,27 @@ function TeamDetail() {
       .catch(console.error);
   }, [selectedYear]);
 
+  useEffect(() => {
+    if (!leagueStats.length) return;
+    const ranks = {};
+    METRICS.forEach(metric => {
+      const sorted = [...leagueStats].sort((a, b) =>
+        ASC.includes(metric)
+          ? a[metric] - b[metric]
+          : b[metric] - a[metric]
+      );
+      const idx = sorted.findIndex(row => row.Team === code);
+      if (idx !== -1) ranks[metric] = idx + 1;
+    });
+    setTeamRanks(ranks);
+  }, [leagueStats, code]);
+
+  function getOrdinal(n) {
+    const s = ["th","st","nd","rd"],
+          v = n % 100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
+
   // 過濾當年
   const filteredBatters = useMemo(() =>
     batters.filter(b => b.Year === selectedYear),
@@ -59,23 +86,6 @@ function TeamDetail() {
     { key: "K9",   label: "K9",   betterHigh: true },
     { key: "BB9",  label: "BB9",  betterHigh: false },
   ];
-  // 製作排名
-  const getOrdinal = (n) => {
-    const s=["th","st","nd","rd"],
-          v=n%100;
-    return s[(v-20)%10]||s[v]||s[0];
-  };
-
-  const rankings = leagueStats.length
-    ? metrics.map(({key,label,betterHigh}) => {
-        const arr = leagueStats
-          .map(t => parseFloat(t[key])||0)
-          .sort((a,b) => betterHigh ? b-a : a-b);
-        const me = leagueStats.find(t => t.team === code);
-        const idx = arr.findIndex(v => v === parseFloat(me[key]));
-        return { label, rank: idx+1 };
-      })
-    : [];
 
   const getBatterSummary = () => {
     const summary = {
@@ -131,7 +141,7 @@ function TeamDetail() {
     const remainingOuts = outs % 3;
     return `${innings}.${remainingOuts}`;
   }
-  
+
   const getPitcherSummary = () => {
     const summary = {
       W: 0, L: 0, ERA: 0, IP: 0, H: 0, R: 0, ER: 0, HR: 0,
@@ -190,15 +200,28 @@ function TeamDetail() {
       </div>
 
       {/* ====== 排名小卡 2×4 ====== */}
-      <div className="team-detail-rankings">
-        {rankings.map(({label, rank}) => (
-          <div key={label} className="team-detail-rank-item">
-            <span className="team-detail-rank-label">{label}</span>
-            <span className="team-detail-rank-value">
-              {rank}{getOrdinal(rank)}
-            </span>
-          </div>
-        ))}
+      <div className="team-detail-rank-grid">
+        {METRICS.map((m) => {
+          const rank = teamRanks[m] || 31;           // 若沒資料就放在末端
+          const pct   = ((31 - rank) / 30) * 100;    // 1st -> 100%, 30th -> ~3.3%
+          
+          return (
+            <div key={m} className="team-detail-rank-cell">
+              <div className="metric-label">{m}</div>
+              <div className="metric-value">{leagueStats.find(t => t.Team===code)[m].toFixed(3)}</div>
+              <div className="metric-bar">
+                <div
+                  className="metric-bar-fill"
+                  style={{
+                    width: `${pct}%`, 
+                    backgroundColor: teamColor,
+                  }}
+                />
+              </div>
+              <div className="metric-rank">{getOrdinal(rank)}</div>
+            </div>
+          );
+        })}
       </div>
 
       {/* ====== 資料表格 ====== */}

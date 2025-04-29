@@ -16,6 +16,9 @@ base_path = "C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-Sys
 if not os.path.exists(base_path):
     print(f"❌ 找不到資料夾: {base_path}")
     exit(1)
+              
+# 🔹 初始化球隊統計數據
+team_stats = {}
 
 for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
     year_path = os.path.join(base_path, year)
@@ -62,7 +65,6 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 (ID, Year, Team)
                             )
                             if cursor.fetchone():
-                                print(f"⚠️ 已存在, 跳過: {Player} ({ID}, {Year}, {Team})")
                                 continue
                             
                             # 🔹 確認 player_type 並插入對應的 Table
@@ -161,14 +163,194 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                       HR, BB, SO, WHIP, CH, WH, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
                                       PZ8, PZ9, PZLU, PZRU, PZLD, PZRD))
 
-                                print(f"✅ 插入 {Player} 到 {table_name}，球隊: {Team}")
-
                             else:
-                                print(f"⚠️ 未知球員類型: {Type}，跳過 {Player}")
                                 continue
+
+                            # 🔹 統計球員數據到球隊
+                        for player in data:
+                            Team = player.get("Team")
+                            Year = player.get("Year")
+                            Type = player.get("Type")  # batter 或 pitcher
+                            
+                            cursor.execute(
+                                f"SELECT 1 FROM team WHERE Year=%s AND Team=%s LIMIT 1",  
+                                (Year, Team)
+                            )
+                            if cursor.fetchone() or "Team" in Team:
+                                continue
+                            
+                            key = (Year, Team)
+                            
+                            if key not in team_stats:
+                                team_stats[key] = {
+                                    "Team": Team,
+                                    "Year": Year,
+                                    "Total_PA": 0,
+                                    "Total_AB": 0,
+                                    "Total_H": 0,
+                                    "Total_2B": 0,
+                                    "Total_3B": 0,
+                                    "Total_HR": 0,
+                                    "Total_RBI": 0,
+                                    "Total_SO": 0,
+                                    "Total_BB": 0,
+                                    "Total_SB": 0,
+                                    "Total_CS": 0,
+                                    "Total_AVG": 0,
+                                    "Total_OBP": 0,
+                                    "Total_SLG": 0,
+                                    "Total_OPS": 0,
+                                    "Total_Chase": 0,
+                                    "Total_Whiff": 0,
+                                    "Total_GB": 0,
+                                    "Total_FB": 0,
+                                    "Total_GF": 0,
+                                    
+                                    "Total_W": 0,
+                                    "Total_L": 0,
+                                    "Total_ERA": 0,
+                                    "Total_IP": 0,
+                                    "Total_PH": 0,
+                                    "Total_R": 0,
+                                    "Total_ER": 0,
+                                    "Total_PHR": 0,
+                                    "Total_PBB": 0,
+                                    "Total_BB9": 0,
+                                    "Total_PSO": 0,
+                                    "Total_K9": 0,
+                                    "Total_WHIP": 0,
+                                    "Total_PChase": 0,
+                                    "Total_PWhiff": 0,
+                                    "Total_PGB": 0,
+                                    "Total_PFB": 0,
+                                    "Total_PGF": 0,
+                                }
+                                print(f"✅ 新球隊統計: {Team} ({Year})")
+
+                            # 累加球員數據
+                            if Type == "Batter":
+                                team_stats[key]["Total_PA"] += int(player.get("PA", 0))
+                                team_stats[key]["Total_AB"] += int(player.get("AB", 0))
+                                team_stats[key]["Total_H"] += int(player.get("H", 0))
+                                team_stats[key]["Total_2B"] += int(player.get("2B", 0))
+                                team_stats[key]["Total_3B"] += int(player.get("3B", 0))
+                                team_stats[key]["Total_HR"] += int(player.get("HR", 0))
+                                team_stats[key]["Total_RBI"] += int(player.get("RBI", 0))
+                                team_stats[key]["Total_SO"] += int(player.get("SO", 0))
+                                team_stats[key]["Total_BB"] += int(player.get("BB", 0))
+                                team_stats[key]["Total_SB"] += int(player.get("SB", 0))
+                                team_stats[key]["Total_CS"] += int(player.get("CS", 0))
+                                team_stats[key]["Total_OBP"] += float(player.get("OBP", 0)) * int(player.get("PA", 0))
+                                team_stats[key]["Total_Chase"] += float(player.get("Chase%", 0)) * int(player.get("PA", 0))
+                                team_stats[key]["Total_Whiff"] += float(player.get("Whiff%", 0)) * int(player.get("PA", 0))
+                                team_stats[key]["Total_GB"] += float(player.get("GB%", 0)) * int(player.get("PA", 0))
+                                team_stats[key]["Total_FB"] += float(player.get("FB%", 0)) * int(player.get("PA", 0))
+                                
+                            elif Type == "Pitcher":
+                                team_stats[key]["Total_W"] += int(player.get("Wins", 0))
+                                team_stats[key]["Total_L"] += int(player.get("Losses", 0))
+                                IP = float(player.get("IP", 0))
+                                outs = int(IP) * 3 + (IP - int(IP)) * 10  # 將 IP 轉換為出局數
+                                team_stats[key]["Total_IP"] += outs
+                                team_stats[key]["Total_PH"] += int(player.get("Hits", 0))
+                                team_stats[key]["Total_R"] += int(player.get("Runs", 0))
+                                team_stats[key]["Total_ER"] += int(player.get("ER", 0))
+                                team_stats[key]["Total_PHR"] += int(player.get("HR", 0))
+                                team_stats[key]["Total_PBB"] += int(player.get("BB", 0))
+                                team_stats[key]["Total_PSO"] += int(player.get("SO", 0))
+                                team_stats[key]["Total_WHIP"] += float(player.get("WHIP", 0)) * outs / 3
+                                team_stats[key]["Total_PChase"] += float(player.get("Chase%", 0)) * outs
+                                team_stats[key]["Total_PWhiff"] += float(player.get("Whiff%", 0)) * outs
+                                team_stats[key]["Total_PGB"] += float(player.get("GB%", 0)) * outs
+                                team_stats[key]["Total_PFB"] += float(player.get("FB%", 0)) * outs
 
                     except json.JSONDecodeError:
                         print(f"❌ JSON 解析錯誤: {json_file}")
+                        
+for Team, stats in team_stats.items():
+                            
+    if stats["Total_AB"] == 0: stats["Total_AB"] = 1
+    if stats["Total_PA"] == 0: stats["Total_PA"] = 1
+    
+    stats["Total_AVG"] = round(stats["Total_H"] / stats["Total_AB"], 3)
+    stats["Total_OBP"] = round(stats["Total_OBP"] / stats["Total_PA"] , 3)
+    stats["Total_SLG"] = round((stats["Total_H"] + stats["Total_2B"] + 2 * stats["Total_3B"] + 3 * stats["Total_HR"]) / stats["Total_AB"], 3)
+    stats["Total_OPS"] = round(stats["Total_OBP"] + stats["Total_SLG"], 3)
+    stats["Total_Chase"] = round(stats["Total_Chase"] / stats["Total_PA"], 3)
+    stats["Total_Whiff"] = round(stats["Total_Whiff"] / stats["Total_PA"], 3)
+    stats["Total_GB"] = round(stats["Total_GB"] / stats["Total_PA"], 3)
+    stats["Total_FB"] = round(stats["Total_FB"] / stats["Total_PA"], 3)
+    
+    if stats["Total_FB"] == 0: stats["Total_FB"] = 1
+        
+    stats["Total_GF"] =  round(stats["Total_GB"] / stats["Total_FB"], 2)
+    
+    if(stats["Total_IP"] != 0):
+        stats["Total_ERA"] = round(stats["Total_ER"] / stats["Total_IP"] * 27, 2)
+        stats["Total_BB9"] = round(stats["Total_PBB"] / stats["Total_IP"] * 27, 2)
+        stats["Total_K9"] = round(stats["Total_PSO"] / stats["Total_IP"] * 27, 2)
+        stats["Total_WHIP"] = round(stats["Total_WHIP"] / stats["Total_IP"] * 3, 2)
+        stats["Total_PChase"] = round(stats["Total_PChase"] / stats["Total_IP"], 1)
+        stats["Total_PWhiff"] = round(stats["Total_PWhiff"] / stats["Total_IP"], 1)
+        stats["Total_PGB"] = round(stats["Total_PGB"] / stats["Total_IP"], 1)
+        stats["Total_PFB"] = round(stats["Total_PFB"] / stats["Total_IP"], 1)
+    
+    if(stats["Total_PFB"] == 0): stats["Total_PFB"] = 1
+        
+    stats["Total_PGF"] = round(stats["Total_PGB"] / stats["Total_PFB"], 1)
+    stats["Total_IP"] = round(stats["Total_IP"] / 3 + ((stats["Total_IP"] % 3) / 10), 1)
+
+    cursor.execute(f"""
+        INSERT INTO team (
+            Team, Year, PA, AB, H, H2, H3, HR, RBI, SO, BB, SB, CS, AVG, OBP, SLG, OPS, Chase, Whiff, GB, FB, GF,
+            W, L, ERA, IP, PH, R, ER, PHR, PBB, BB9, PSO, K9, WHIP, PChase, PWhiff, PGB, PFB, PGF
+        ) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (
+        stats["Team"],
+        stats["Year"],
+        stats["Total_PA"],
+        stats["Total_AB"],
+        stats["Total_H"],
+        stats["Total_2B"],
+        stats["Total_3B"],
+        stats["Total_HR"],
+        stats["Total_RBI"],
+        stats["Total_SO"],
+        stats["Total_BB"],
+        stats["Total_SB"],
+        stats["Total_CS"],
+        stats["Total_AVG"],
+        stats["Total_OBP"],
+        stats["Total_SLG"],
+        stats["Total_OPS"],
+        stats["Total_Chase"],
+        stats["Total_Whiff"],
+        stats["Total_GB"],
+        stats["Total_FB"],
+        stats["Total_GF"],
+        stats["Total_W"],
+        stats["Total_L"],
+        stats["Total_ERA"],
+        stats["Total_IP"],  # 已轉換為 0.2, 0.1 格式
+        stats["Total_PH"],
+        stats["Total_R"],
+        stats["Total_ER"],
+        stats["Total_PHR"],
+        stats["Total_PBB"],
+        stats["Total_BB9"],
+        stats["Total_PSO"],
+        stats["Total_K9"],
+        stats["Total_WHIP"],
+        stats["Total_PChase"],
+        stats["Total_PWhiff"],
+        stats["Total_PGB"],
+        stats["Total_PFB"],
+        stats["Total_PGF"]  # 已限制為小數點後兩位
+    ))
+
+print("✅ 球隊統計數據已成功插入資料庫")
 
 # 提交變更
 conn.commit()
