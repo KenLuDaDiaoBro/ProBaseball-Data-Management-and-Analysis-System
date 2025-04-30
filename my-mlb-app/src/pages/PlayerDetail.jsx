@@ -295,21 +295,32 @@ function PlayerDetail() {
 
   return (
     <div className="player-detail-container">
-      {/* 搜尋框 */}
-      <div className="player-detail-search-box">
+      <div className="fixed-header-bg" />
+      <button className="back-button" onClick={() => navigate(-1)}>←</button>
+
+      <div className="home-image">
+        <img
+          className="home-icon"
+          src="/home-icon.svg"
+          alt="Home"
+          onClick={() => navigate("/")}
+        />
+      </div>
+      
+      <div className="search-box">
         <input
           type="text"
           placeholder="Search for a player or a team..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="player-detail-search-input"
+          className="search-input"
         />
         {filteredOptions.length > 0 && (
-          <ul className="player-detail-search-suggestions">
+          <ul className="search-suggestions">
             {filteredOptions.map((opt, i) => (
               <li
                 key={i}
-                className="player-detail-search-suggestion-item"
+                className="search-suggestion-item"
                 onClick={() => handleSelectOption(opt)}  // ← 呼叫改成 handleSelectOption
               >
                 {opt.type === "player" ? opt.Name : opt.code}
@@ -371,7 +382,14 @@ function PlayerDetail() {
             <tbody>
               {playerData.map((stat, index) => (
                 <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
-                  <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.PA}</td><td>{stat.AB}</td><td>{stat.H}</td>
+                  <td>{stat.Year}</td>
+                  <td
+                    className="player-detail-team-cell"
+                    onClick={() => navigate(`/team/${stat.Team}`)}
+                  >
+                    {stat.Team}
+                  </td>
+                  <td>{stat.PA}</td><td>{stat.AB}</td><td>{stat.H}</td>
                   <td>{stat.H2}</td><td>{stat.H3}</td><td>{stat.HR}</td><td>{stat.RBI}</td><td>{stat.SO}</td>
                   <td>{stat.BB}</td><td>{stat.SB}</td><td>{stat.CS}</td><td>{stat.AVG.toFixed(3)}</td><td>{stat.OBP.toFixed(3)}</td>
                   <td>{stat.SLG.toFixed(3)}</td><td>{stat.OPS.toFixed(3)}</td>
@@ -406,7 +424,14 @@ function PlayerDetail() {
             <tbody>
               {playerData.map((stat, index) => (
                 <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
-                  <td>{stat.Year}</td><td>{stat.Team}</td><td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA.toFixed(2)}</td>
+                  <td>{stat.Year}</td>
+                  <td
+                    className="player-detail-team-cell"
+                    onClick={() => navigate(`/team/${stat.Team}`)}
+                  >
+                    {stat.Team}
+                  </td>
+                  <td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA.toFixed(2)}</td>
                   <td>{stat.IP.toFixed(1)}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
                   <td>{stat.SO}</td><td>{stat.K9.toFixed(2)}</td><td>{stat.BB}</td><td>{stat.BB9.toFixed(2)}</td><td>{stat.WHIP.toFixed(2)}</td>
                   <td>{isNaN(parseFloat(stat.Chase)) ? stat.Chase : parseFloat(stat.Chase).toFixed(1)}</td>
@@ -429,18 +454,6 @@ function PlayerDetail() {
           <p>Unknown player type</p>
         )}
       </div>
-
-      <button className="back-button" onClick={() => navigate(-1)}>←</button>
-
-      <div className="player-detail-image">
-        <img
-          className="home-icon"
-          src="/home-icon.svg"
-          alt="Home"
-          onClick={() => navigate("/")}
-        />
-      </div>
-      
     </div>
     
   );

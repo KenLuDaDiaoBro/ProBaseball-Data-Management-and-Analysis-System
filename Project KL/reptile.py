@@ -13,9 +13,9 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
 # 設定目標球隊
-Teams = ["Angels"]
+Teams = ["Orioles"]
 players_data = []
-Yr = [2021]
+Yr = [2024]
 
 # 設定瀏覽器
 s = Service("C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/chromedriver-win64/chromedriver.exe")
@@ -121,7 +121,11 @@ for Year in Yr:
                 b = driver.find_elements(By.XPATH, f"//table[@id='playeDiscipline']//tr[.//span[text()='{Year}']]")
                 
                 ch = b[0].find_element(By.XPATH, ".//td[6]").text
+                if ch == "--":
+                    ch = "0.0"
                 wh = b[0].find_element(By.XPATH, ".//td[11]").text
+                if wh == "--":
+                    wh = "0.0"
                 print(f"✅ CH%: {ch}, SW%: {wh}")
                 
                 element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "statcast_nav_type_zones")))
@@ -244,7 +248,11 @@ for Year in Yr:
                 b = driver.find_elements(By.XPATH, f"//table[@id='playeDiscipline']//tr[.//span[text()='{Year}']]")
                 
                 ch = b[0].find_element(By.XPATH, ".//td[6]").text
+                if ch == "--":
+                    ch = "0.0"
                 wh = b[0].find_element(By.XPATH, ".//td[11]").text
+                if wh == "--":
+                    wh = "0.0"
                 print(f"✅ CH%: {ch}, SW%: {wh}")
                 
                 element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "statcast_nav_type_zones")))

@@ -8,6 +8,12 @@ const ASC = ["ERA", "WHIP", "BB9"];
 function TeamDetail() {
   const { code } = useParams();
   const navigate = useNavigate();
+
+  const [players, setPlayers] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredOptions, setFilteredOptions] = useState([]);
+
   const [yearList, setYearList] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
   const [batters, setBatters] = useState([]);
@@ -16,20 +22,80 @@ function TeamDetail() {
   const [teamRanks, setTeamRanks] = useState({});
   const teamColor = teamColors[code];
 
-  // 拿整隊統計
+  useEffect(() => {
+    fetch("http://127.0.0.1:5000/api/players")
+      .then(r => r.json())
+      .then(setPlayers)
+      .catch(console.error);
+
+    fetch("http://127.0.0.1:5000/api/teams")
+      .then(r => r.json())
+      .then(setTeams)
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+      const term = searchTerm.trim().toLowerCase();
+      if (!term) {
+        setFilteredOptions([]);
+        return;
+      }
+    
+      // 1. 球員打分
+      const scoredPlayers = players
+        .map((p) => {
+          const name = p.Name.toLowerCase();
+          let score = 0;
+          if (name.startsWith(term)) score += 2;
+          else if (name.includes(term)) score += 1;
+          return { ...p, score, type: 'player' };
+        })
+        .filter((p) => p.score > 0);
+    
+      // 2. 球隊打分
+      const scoredTeams = teams
+        .map((t) => {
+          const code = t.code.toLowerCase();
+          let score = 0;
+          if (code.startsWith(term)) score += 2;
+          else if (code.includes(term)) score += 1;
+          return { ...t, score, type: 'team' };
+        })
+        .filter((t) => t.score > 0);
+    
+      // 3. 合併、排序、取前 5
+      const combined = [...scoredPlayers, ...scoredTeams]
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          // 同分就按名字/代號
+          const aKey = a.type === 'player' ? a.Name : a.code;
+          const bKey = b.type === 'player' ? b.Name : b.code;
+          return aKey.localeCompare(bKey);
+        })
+        .slice(0, 5)
+        .map(({ score, ...rest }) => rest);
+    
+      setFilteredOptions(combined);
+    }, [searchTerm, players, teams]);
+
+    const handleSelectOption = (opt) => {
+      setSearchTerm("");
+      setFilteredOptions([]);      // ← 這裡清空 filteredOptions
+      if (opt.type === "player") {
+       navigate(`/playerDetail/${opt.id}`);
+      } else {
+       navigate(`/team/${opt.code}`);
+      }
+    };
+
   useEffect(() => {
     fetch(`http://127.0.0.1:5000/api/team_stats?team=${code}`)
-      .then(res => res.json())
+      .then(r => r.json())
       .then(({ batters, pitchers }) => {
         setBatters(batters);
         setPitchers(pitchers);
-        // 建立年份清單
-        const years = Array.from(
-          new Set([
-            ...batters.map(b => b.Year),
-            ...pitchers.map(p => p.Year)
-          ])
-        ).sort((a,b) => b - a);
+        const years = Array.from(new Set([...batters, ...pitchers].map(x => x.Year)))
+          .sort((a,b) => b - a);
         setYearList(years);
         if (years.length) setSelectedYear(years[0]);
       })
@@ -39,53 +105,42 @@ function TeamDetail() {
   useEffect(() => {
     if (!selectedYear) return;
     fetch(`http://127.0.0.1:5000/api/league_team_stats?year=${selectedYear}`)
-      .then(res => res.json())
-      .then(data => setLeagueStats(data))
+      .then(r => r.json())
+      .then(setLeagueStats)
       .catch(console.error);
   }, [selectedYear]);
+
+  const teamData = useMemo(() => {
+    // 找到該隊全年累計數據
+    return leagueStats.find(t => t.Team === code) || {};
+  }, [leagueStats, code]);
 
   useEffect(() => {
     if (!leagueStats.length) return;
     const ranks = {};
-    METRICS.forEach(metric => {
-      const sorted = [...leagueStats].sort((a, b) =>
-        ASC.includes(metric)
-          ? a[metric] - b[metric]
-          : b[metric] - a[metric]
+    METRICS.forEach(m => {
+      const sorted = [...leagueStats].sort((a,b) =>
+        ASC.includes(m) ? a[m] - b[m] : b[m] - a[m]
       );
-      const idx = sorted.findIndex(row => row.Team === code);
-      if (idx !== -1) ranks[metric] = idx + 1;
+      const idx = sorted.findIndex(r => r.Team === code);
+      if (idx !== -1) ranks[m] = idx + 1;
     });
     setTeamRanks(ranks);
   }, [leagueStats, code]);
 
-  function getOrdinal(n) {
-    const s = ["th","st","nd","rd"],
-          v = n % 100;
-    return n + (s[(v-20)%10] || s[v] || s[0]);
-  }
-
-  // 過濾當年
-  const filteredBatters = useMemo(() =>
-    batters.filter(b => b.Year === selectedYear),
+  const filteredBatters = useMemo(
+    () => batters.filter(b => b.Year === selectedYear),
     [batters, selectedYear]
   );
-
-  const filteredPitchers = useMemo(() =>
-    pitchers.filter(p => p.Year === selectedYear),
+  const filteredPitchers = useMemo(
+    () => pitchers.filter(p => p.Year === selectedYear),
     [pitchers, selectedYear]
   );
 
-  const metrics = [
-    { key: "AVG",  label: "AVG",  betterHigh: true },
-    { key: "OBP",  label: "OBP",  betterHigh: true },
-    { key: "SLG",  label: "SLG",  betterHigh: true },
-    { key: "OPS",  label: "OPS",  betterHigh: true },
-    { key: "ERA",  label: "ERA",  betterHigh: false },
-    { key: "WHIP", label: "WHIP", betterHigh: false },
-    { key: "K9",   label: "K9",   betterHigh: true },
-    { key: "BB9",  label: "BB9",  betterHigh: false },
-  ];
+  function getOrdinal(n) {
+    const s=["th","st","nd","rd"], v=n%100;
+    return n + (s[(v-20)%10]||s[v]||s[0]);
+  }
 
   const getBatterSummary = () => {
     const summary = {
@@ -183,9 +238,65 @@ function TeamDetail() {
   const batterSummary = getBatterSummary();
   const pitcherSummary = getPitcherSummary();
 
+  const handlePlayerClick = (name, team, year) => {
+    fetch(
+      `http://127.0.0.1:5000/api/player_lookup?` +
+      new URLSearchParams({ name, team, year})
+    )
+      .then((r) => {
+        if (!r.ok) throw new Error("Not found");
+        return r.json();
+      })
+      .then((data) => {
+        if (data.id) {
+          navigate(`/playerDetail/${data.id}`);
+        } else {
+          console.error("No id returned");
+        }
+      })
+      .catch((err) => {
+        console.error("Lookup error:", err);
+        alert("找不到這位球員的詳細資料");
+      });
+  };
+
+
   return (
     <div className="team-detail-container">
-      <button className="back-button" onClick={() => navigate(-1)}>←</button>
+      <div className="fixed-header-bg" />
+      <button className="back-button" onClick={()=>navigate(-1)}>←</button>
+      <div className="home-image">
+        <img
+          className="home-icon"
+          src="/home-icon.svg"
+          alt="Home"
+          onClick={() => navigate("/")}
+        />
+      </div>
+
+      <div className="search-box">
+        <input
+          type="text"
+          placeholder="Search for a player or a team..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+        {filteredOptions.length > 0 && (
+          <ul className="search-suggestions">
+            {filteredOptions.map((opt, i) => (
+              <li
+                key={i}
+                className="search-suggestion-item"
+                onClick={() => handleSelectOption(opt)}  // ← 呼叫改成 handleSelectOption
+              >
+                {opt.type === "player" ? opt.Name : opt.code}
+             </li>
+            ))}
+          </ul>
+       )}
+      </div>
+
       <h1 className="team-detail-title">{code}</h1>
       <div className="team-detail-year-select-wrapper">
         <label htmlFor="yearSelect" className="team-detail-year-label">Year:</label>
@@ -201,24 +312,30 @@ function TeamDetail() {
 
       {/* ====== 排名小卡 2×4 ====== */}
       <div className="team-detail-rank-grid">
-        {METRICS.map((m) => {
-          const rank = teamRanks[m] || 31;           // 若沒資料就放在末端
-          const pct   = ((31 - rank) / 30) * 100;    // 1st -> 100%, 30th -> ~3.3%
-          
+        {METRICS.map(m => {
+          // 這邊用 teamData 取值，不會再直接呼叫 find
+          const stat = teamData[m];
+          const rank = teamRanks[m] || 31; 
+          const pct = ((31 - rank) / 30) * 100;
+
           return (
             <div key={m} className="team-detail-rank-cell">
               <div className="metric-label">{m}</div>
-              <div className="metric-value">{leagueStats.find(t => t.Team===code)[m].toFixed(3)}</div>
+              <div className="metric-value">
+                {stat != null ? stat : "—"}
+              </div>
               <div className="metric-bar">
                 <div
                   className="metric-bar-fill"
                   style={{
-                    width: `${pct}%`, 
-                    backgroundColor: teamColor,
+                    width: `${pct}%`,
+                    backgroundColor: teamColor || "#888", // fallback 顏色
                   }}
                 />
               </div>
-              <div className="metric-rank">{getOrdinal(rank)}</div>
+              <div className="metric-rank">
+                {rank <= 30 ? getOrdinal(rank) : "—"}
+              </div>
             </div>
           );
         })}
@@ -242,7 +359,17 @@ function TeamDetail() {
             <tbody>
               {filteredBatters.map((b,i) => (
                 <tr key={i}>
-                  <td>{b.Name}</td><td>{b.PA}</td><td>{b.AB}</td><td>{b.H}</td>
+                  <td className="player-link-button"
+                    onClick={() =>
+                      handlePlayerClick(
+                        b.Name,
+                        code,
+                        selectedYear
+                      )
+                    }>
+                      {b.Name}
+                  </td>
+                  <td>{b.PA}</td><td>{b.AB}</td><td>{b.H}</td>
                   <td>{b.H2}</td><td>{b.H3}</td><td>{b.HR}</td><td>{b.RBI}</td><td>{b.SO}</td>
                   <td>{b.BB}</td><td>{b.SB}</td><td>{b.CS}</td>
                   <td>{parseFloat(b.AVG).toFixed(3)}</td>
@@ -283,7 +410,17 @@ function TeamDetail() {
             <tbody>
               {filteredPitchers.map((p, index) => (
                 <tr key={index} className={p.Team && p.Team.includes("Team") ? "team-row" : ""}>
-                  <td>{p.Name}</td><td>{p.W}</td><td>{p.L}</td><td>{p.ERA.toFixed(2)}</td>
+                  <td className="player-link-button"
+                    onClick={() =>
+                      handlePlayerClick(
+                        p.Name,
+                        code,
+                        selectedYear
+                      )
+                    }>
+                      {p.Name}
+                  </td>
+                  <td>{p.W}</td><td>{p.L}</td><td>{p.ERA.toFixed(2)}</td>
                   <td>{p.IP.toFixed(1)}</td><td>{p.H}</td><td>{p.R}</td><td>{p.ER}</td><td>{p.HR}</td>
                   <td>{p.SO}</td><td>{p.K9.toFixed(2)}</td><td>{p.BB}</td><td>{p.BB9.toFixed(2)}</td><td>{p.WHIP.toFixed(2)}</td>
                   <td>{isNaN(parseFloat(p.Chase)) ? "N/A" : parseFloat(p.Chase).toFixed(1)}</td>

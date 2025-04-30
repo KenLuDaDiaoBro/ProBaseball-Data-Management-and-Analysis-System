@@ -214,19 +214,6 @@ button:focus-visible {
 /* ============================= */
 /* ===== PlayerDetail 頁面 ===== */
 /* ============================= */
-
-/* ========== 外部包裝 ========== */
-.player-detail-wrap {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background-color: #f8f9fa;
-}
-
 .player-detail-container {
   height: 100vh;
   background: none;
@@ -436,6 +423,11 @@ button:focus-visible {
   white-space: nowrap; /* 不換行 */
 }
 
+.player-detail-stats-table td.player-detail-team-cell:hover {
+  color: #0080FF;
+  text-decoration: none;
+}
+
 .player-detail-summary-row {
   background-color: #f0fdf4 !important;
   font-weight: bold;
@@ -445,10 +437,12 @@ button:focus-visible {
 /* ====== TeamDetail 頁面 ====== */
 /* ============================= */
 .team-detail-container {
+  padding-top: 100px; 
   width: 100vw;
   height: 100%;
+  top: 50px;
   padding: 20px;
-  background: #f8f9fa;
+  padding-top: 80px;
   min-height: 100vh;
   box-sizing: border-box;
 }
@@ -461,8 +455,10 @@ button:focus-visible {
   color: #333;
 }
 
+
 .team-detail-year-select-wrapper {
   display: flex;
+  padding-top: 10px;
   justify-content: center;
   align-items: center;
   margin-bottom: 30px;
@@ -486,22 +482,25 @@ button:focus-visible {
 
 .team-detail-rank-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, 300px);
+  justify-content: center; 
+  gap: 20px;
   margin-bottom: 24px;
 }
 
 .team-detail-rank-cell {
-  background: #0f1826;
-  padding: 12px 16px;
+  background: #c5ab89; /* 深灰色背景 */
+  padding: 6px 8px;  
   border-radius: 8px;
   color: #fff;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  z-index: 1;
 }
 
 .metric-label {
+  padding-top: 5px; 
   font-size: 14px;
   opacity: 0.8;
 }
@@ -516,7 +515,7 @@ button:focus-visible {
   position: relative;
   width: 100%;
   height: 8px;
-  background: #22314f;
+  background: #e1e1df;
   border-radius: 4px;
   overflow: hidden;
   margin: 8px 0;
@@ -529,8 +528,12 @@ button:focus-visible {
 }
 
 .metric-rank {
-  font-size: 16px;
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 36px;
   font-weight: 600;
+  opacity: 0.9;
 }
 
 .team-detail-stats-wrapper {
@@ -572,9 +575,94 @@ button:focus-visible {
   font-weight: 600;
 }
 
+.team-detail-stats-table td.player-link-button:hover {
+  color: #0080FF;
+  text-decoration: none;
+}
+
 .team-detail-summary-row {
   background-color: #f0fdf4 !important;
   font-weight: bold;
+}
+
+/* ========== 搜尋列 ========== */
+.search-box {
+  position: fixed;
+  top: 16px;
+  right: 80px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+.input::placeholder {
+  color: #aaa;
+}
+.search-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+  background: #fff;
+  outline: none;
+}
+
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);     /* 緊貼 <input> 下面 */
+  left: 0;
+  right: 0;      /* 撐滿 wrapper 的 250px */
+  margin: 0;
+  padding: 0;
+  margin-top: 10px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 10;
+  overflow: hidden;
+  max-height: calc(5 * 45px); /* 正好放 5 筆 */
+  text-align: center;
+}
+
+.search-suggestions li {
+  height: 45px;
+  line-height: 45px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  /* 新增：粗一點的字重、同樣字型 */
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.search-suggestions li:nth-child(odd) {
+  background: #f9f9f9;
+}
+
+/* 滑鼠經過 */
+.search-suggestions li:hover {
+  background: #007bff;
+  color: #fff;
+  font-weight: 700;
+  transform: scale(1.05);
 }
 
 /* ========== 按鈕 ========== */
@@ -600,8 +688,8 @@ button:focus-visible {
 
 /* ========== 其他圖標按鈕 ========== */
 .back-button {
-  position: absolute;
-  top: 20px;
+  position: fixed;
+  top: 10px;
   left: 20px;
   font-size: 24px;
   background: none;
@@ -612,12 +700,22 @@ button:focus-visible {
 }
 
 .home-icon {
-  position: absolute;
-  top: 40px;
+  position: fixed;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   width: 40px;   /* 控制大小 */
   height: 40px;
   cursor: pointer;
+  z-index: 2;
+}
+
+.fixed-header-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;         /* 撑满视窗宽度 */
+  height: 80px;         /* 根据固定元素的高度调整 */
+  background-color: #fff;
   z-index: 2;
 }

@@ -269,6 +269,42 @@ def league_team_stats():
     except mysql.connector.Error as err:
         print("Database error in /api/league_team_stats:", err)
         return jsonify({"error": "Database connection failed"}), 500
+    
+@app.route("/api/player_lookup", methods=["GET"])
+def player_lookup():
+    name = request.args.get("name")
+    team = request.args.get("team")
+    year = request.args.get("year", type=int)
+    if not all([name, team, year]):
+        return jsonify({"error": "Missing parameters"}), 400
+
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # 先查 batter
+    cursor.execute("""
+        SELECT id FROM batter
+         WHERE Name = %s AND Team = %s AND Year = %s
+         LIMIT 1
+    """, (name, team, year))
+    row = cursor.fetchone()
+
+    # 再查 pitcher
+    if not row:
+        cursor.execute("""
+            SELECT id FROM pitcher
+             WHERE Name = %s AND Team = %s AND Year = %s
+             LIMIT 1
+        """, (name, team, year))
+        row = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if row and row.get("id"):
+        return jsonify({"id": row["id"]})
+    else:
+        return jsonify({"error": "Player not found"}), 404
 
 if __name__ == "__main__":
     app.run(debug=True)
