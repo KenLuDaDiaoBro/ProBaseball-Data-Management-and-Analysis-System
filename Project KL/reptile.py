@@ -13,9 +13,9 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
 # 設定目標球隊
-Teams = ["Orioles"]
+Teams = ["Red Sox"]
 players_data = []
-Yr = [2024]
+Yr = [2023, 2024]
 
 # 設定瀏覽器
 s = Service("C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/chromedriver-win64/chromedriver.exe")
@@ -132,6 +132,10 @@ for Year in Yr:
                 element.click()
                 year_dropdown = Select(driver.find_element(By.ID, "ddlZoneSeason"))
                 year_dropdown.select_by_value(f"{Year}")
+                year_dropdown = Select(driver.find_element(By.ID, "ddlZoneHand"))
+                year_dropdown.select_by_value("R")
+                time.sleep(1)
+                year_dropdown.select_by_visible_text("Pitcher Throws")
                 time.sleep(1)
                 AVG_Zone = []
                 try:       
@@ -259,6 +263,10 @@ for Year in Yr:
                 element.click()
                 year_dropdown = Select(driver.find_element(By.ID, "ddlZoneSeason"))
                 year_dropdown.select_by_value(f"{Year}")
+                year_dropdown = Select(driver.find_element(By.ID, "ddlZoneHand"))
+                year_dropdown.select_by_value("R")
+                time.sleep(1)
+                year_dropdown.select_by_visible_text("Batter Stands")
                 time.sleep(1)
                 element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "zoneChartpitches")))
                 texts = element.find_elements(By.TAG_NAME, "text")
