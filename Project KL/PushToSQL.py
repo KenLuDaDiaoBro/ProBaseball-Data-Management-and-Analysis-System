@@ -117,7 +117,7 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                       SO, BB, SB, CS, AVG, OBP, SLG, OPS, CH, WH, GB, FB, GF, Sprint, AVGZ1, AVGZ2,
                                       AVGZ3, AVGZ4, AVGZ5, AVGZ6, AVGZ7, AVGZ8, AVGZ9, AVGZLU, AVGZRU, AVGZLD, AVGZRD))
 
-                                print(f"✅ 插入 {Player} 到 {table_name}，球隊: {Team}")
+                                print(f"✅ 插入 {Player} 到 {table_name},球隊: {Team} ,年份: {Year}")
 
                             elif table_name == "pitcher":
                                 W = player.get("Wins") or 0
@@ -162,6 +162,8 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 """, (Player, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
                                       HR, BB, SO, WHIP, CH, WH, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
                                       PZ8, PZ9, PZLU, PZRU, PZLD, PZRD))
+                                
+                                print(f"✅ 插入 {Player} 到 {table_name}，球隊: {Team} ,年份: {Year}    ")
 
                             else:
                                 continue
@@ -297,8 +299,8 @@ for Team, stats in team_stats.items():
     
     if(stats["Total_PFB"] == 0): stats["Total_PFB"] = 1
         
-    stats["Total_PGF"] = round(stats["Total_PGB"] / stats["Total_PFB"], 1)
-    stats["Total_IP"] = round(stats["Total_IP"] / 3 + ((stats["Total_IP"] % 3) / 10), 1)
+    stats["Total_PGF"] = round(stats["Total_PGB"] / stats["Total_PFB"], 2)
+    stats["Total_IP"] = round(stats["Total_IP"] // 3 + ((stats["Total_IP"] % 3) / 10), 1)
 
     cursor.execute(f"""
         INSERT INTO team (

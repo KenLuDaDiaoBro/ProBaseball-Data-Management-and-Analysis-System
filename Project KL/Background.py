@@ -246,16 +246,10 @@ def league_team_stats():
 
         cursor.execute("""
             SELECT
-              Team,
-              Year,
-              AVG,
-              OPS,
-              SLG,
-              OBP,
-              ERA,
-              WHIP,
-              K9,
-              BB9
+              Team, Year, PA, AB, H, H2, H3, HR, RBI, SO, BB, SB, CS,
+              AVG, OPS, SLG, OBP, Chase, Whiff, GB, FB, GF,
+              W, L, ERA, IP, PH, R, ER, PHR, PBB, BB9, PSO, K9,
+              WHIP, PChase, PWhiff, PGB, PFB, PGF
             FROM team
             WHERE Year = %s
         """, (year,))
