@@ -207,7 +207,7 @@ def receive_selected_player():
     if not player_stats:
         query = """
         SELECT Name, Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, SO, WHIP, 
-               Chase, Whiff, GB, FB, GF, PZ1, PZ2,PZ3, PZ4, PZ5, PZ6, PZ7, PZ8, 
+               Chase, Whiff, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7, PZ8, 
                PZ9, PZLU, PZRU, PZLD, PZRD, 
                ROUND(
                     ANY_VALUE(SO) / NULLIF(

@@ -5,6 +5,8 @@ import {
   buildStyles
 } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import { BatterHeatMap } from './BatterHeatmap';
+import { PitcherHeatMap } from './PitcherHeatmap';
 
 function PlayerDetail() {
   const { id } = useParams(); // 取得 URL 中的球員 ID
@@ -179,6 +181,8 @@ function PlayerDetail() {
 
   const gaugeData = getGaugeData();
 
+  const currentStat = playerData.find(p => Number(p.Year) === Number(selectedYear));
+
   const getBatterSummary = () => {
     const summary = {
       PA: 0, AB: 0, H: 0, H2: 0, H3: 0, HR: 0, RBI: 0, SO: 0,
@@ -348,6 +352,22 @@ function PlayerDetail() {
               <option key={year} value={year}>{year}</option>
             ))}
         </select>
+      </div>
+
+      <div className="player-detail-heatmap">
+        {playerData[0] && (
+          playerData[0].Type === "Batter" ? (
+            <>
+              <h2 className="player-detail-heatmap-title">Batting Average</h2>
+              <BatterHeatMap player={currentStat} />
+            </>
+          ) : (
+            <>
+              <h2 className="player-detail-heatmap-title">Total Pitches</h2>
+              <PitcherHeatMap player={currentStat} />
+            </>
+          )
+        )}
       </div>
 
       <div className="player-detail-gauge-wrapper">
