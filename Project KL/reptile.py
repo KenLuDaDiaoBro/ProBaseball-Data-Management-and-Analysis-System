@@ -15,7 +15,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 # 設定目標球隊
 Teams = ["Royals"]
 players_data = []
-Yr = [2021]
+Yr = [2022]
 
 # 設定瀏覽器
 s = Service("C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/chromedriver-win64/chromedriver.exe")

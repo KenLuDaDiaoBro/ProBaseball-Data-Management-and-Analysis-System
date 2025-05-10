@@ -206,21 +206,9 @@ def receive_selected_player():
     
     if not player_stats:
         query = """
-        SELECT Name, Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, SO, WHIP, 
+        SELECT Name, Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, BB9, SO, K9, WHIP, 
                Chase, Whiff, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7, PZ8, 
-               PZ9, PZLU, PZRU, PZLD, PZRD, 
-               ROUND(
-                    ANY_VALUE(SO) / NULLIF(
-                        (FLOOR(ANY_VALUE(IP)) + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10 / 3)),
-                        0
-                    ) * 9, 2
-                ) AS K9,
-                ROUND(
-                    ANY_VALUE(BB) / NULLIF(
-                        (FLOOR(ANY_VALUE(IP)) + ((ANY_VALUE(IP) - FLOOR(ANY_VALUE(IP))) * 10 / 3)),
-                        0
-                    ) * 9, 2
-                ) AS BB9
+               PZ9, PZLU, PZRU, PZLD, PZRD
         FROM pitcher
         WHERE id = %s
         ORDER BY Year ASC;
@@ -299,6 +287,55 @@ def player_lookup():
         return jsonify({"id": row["id"]})
     else:
         return jsonify({"error": "Player not found"}), 404
+    
+@app.route('/api/leaderboard', methods=['GET'])
+def leaderboard():
+    type = request.args.get('type')
+    year = request.args.get('year')
+    metric = request.args.get('metric')
+
+    if type not in ['batter', 'pitcher'] or not year or not metric:
+        return jsonify({'error': 'Invalid query parameters'}), 400
+
+    allowed_metrics = {
+        'batter': ['H', 'HR', 'RBI', 'AVG', 'OBP', 'OPS', 'SB'],
+        'pitcher': ['ERA', 'WHIP', 'SO', 'BB', 'K9', 'BB9', 'W', 'L']
+    }
+
+    if metric not in allowed_metrics[type]:
+        return jsonify({'error': 'Invalid metric for selected type'}), 400
+
+    sort_order = 'ASC' if metric in ['ERA', 'WHIP', 'BB9'] else 'DESC'
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        game = 162
+        if type == 'batter':
+            min_PA = game * 3
+            min_condition = f"PA >= {min_PA}"
+        else:
+            min_IP = game
+            min_condition = f"IP >= {min_IP}"
+
+        query = f"""
+            SELECT Name, {metric}
+            FROM {type}
+            WHERE Year = %s AND {min_condition}
+            ORDER BY `{metric}` {sort_order}
+            LIMIT 50
+        """
+        cursor.execute(query, (year,))
+        results = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+        return jsonify(results)
+
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Database query error'}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

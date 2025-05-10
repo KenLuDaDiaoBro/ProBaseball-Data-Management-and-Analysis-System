@@ -151,16 +151,27 @@ for year in os.listdir(base_path):  # 年份資料夾（2022, 2023, 2024）
                                 PZLD = PZ[11]
                                 PZRD = PZ[12]
                                 
+                                FIP = float(IP)
+                                whole = int(FIP)
+                                fractional = FIP - whole
+                                out = whole * 3 + int(fractional * 10)
+                                if out == 0:
+                                    K9 = 0
+                                    BB9 = 0
+                                else:
+                                    K9 = round(int(SO) / out * 27, 2)
+                                    BB9 = round(int(BB) / out * 27, 2)
+                                
                                 # 🔹 插入資料
                                 cursor.execute(f"""
                                     INSERT INTO {table_name} (Name, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
-                                    HR, BB, SO, WHIP, Chase, Whiff, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
+                                    HR, BB, BB9, SO, K9, WHIP, Chase, Whiff, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
                                     PZ8, PZ9, PZLU, PZRU, PZLD, PZRD) 
                                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s)
                                 """, (Player, ID, Year, Team, Division, Type, W, L, ERA, IP, H, R, ER,
-                                      HR, BB, SO, WHIP, CH, WH, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
+                                      HR, BB, BB9, SO, K9, WHIP, CH, WH, GB, FB, GF, PZ1, PZ2, PZ3, PZ4, PZ5, PZ6, PZ7,
                                       PZ8, PZ9, PZLU, PZRU, PZLD, PZRD))
                                 
                                 print(f"✅ 插入 {Player} 到 {table_name}，球隊: {Team} ,年份: {Year}    ")

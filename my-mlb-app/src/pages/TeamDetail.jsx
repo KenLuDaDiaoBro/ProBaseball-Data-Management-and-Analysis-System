@@ -224,20 +224,24 @@ function TeamDetail() {
 
           return (
             <div key={m} className="team-detail-rank-cell">
-              <div className="metric-label">{m}</div>
-              <div className="metric-value">
-                {stat != null ? stat : "—"}
+              <div className="team-detail-metric-label">{m}</div>
+              <div className="team-detail-metric-value">
+                {stat != null
+                  ? ["ERA", "WHIP", "K9", "BB9"].includes(m)
+                    ? parseFloat(stat).toFixed(2)
+                    : parseFloat(stat).toFixed(3)
+                  : "—"}
               </div>
-              <div className="metric-bar">
+              <div className="team-detail-metric-bar">
                 <div
-                  className="metric-bar-fill"
+                  className="team-detail-metric-bar-fill"
                   style={{
                     width: `${pct}%`,
                     backgroundColor: teamColor || "#888", // fallback 顏色
                   }}
                 />
               </div>
-              <div className="metric-rank">
+              <div className="team-detail-metric-rank">
                 {rank <= 30 ? getOrdinal(rank) : "—"}
               </div>
             </div>
@@ -292,8 +296,16 @@ function TeamDetail() {
                 <td>Total</td>
                 <td>{teamData.PA}</td><td>{teamData.AB}</td><td>{teamData.H}</td><td>{teamData.H2}</td><td>{teamData.H3}</td>
                 <td>{teamData.HR}</td><td>{teamData.RBI}</td><td>{teamData.SO}</td><td>{teamData.BB}</td><td>{teamData.SB}</td>
-                <td>{teamData.CS}</td><td>{teamData.AVG}</td><td>{teamData.OBP}</td><td>{teamData.SLG}</td><td>{teamData.OPS}</td>
-                <td>{teamData.Chase}</td><td>{teamData.Whiff}</td><td>{teamData.GB}</td><td>{teamData.FB}</td><td>{teamData.GF}</td>
+                <td>{teamData.CS}</td>
+                <td>{parseFloat(teamData.AVG).toFixed(3)}</td>
+                <td>{parseFloat(teamData.OBP).toFixed(3)}</td>
+                <td>{parseFloat(teamData.SLG).toFixed(3)}</td>
+                <td>{parseFloat(teamData.OPS).toFixed(3)}</td>
+                <td>{parseFloat(teamData.Chase).toFixed(1)}</td>
+                <td>{parseFloat(teamData.Whiff).toFixed(1)}</td>
+                <td>{parseFloat(teamData.GB).toFixed(1)}</td>
+                <td>{parseFloat(teamData.FB).toFixed(1)}</td>
+                <td>{parseFloat(teamData.GF).toFixed(2)}</td>
                 <td>/</td>
               </tr>
             </tbody>
@@ -326,20 +338,28 @@ function TeamDetail() {
                   </td>
                   <td>{p.W}</td><td>{p.L}</td><td>{p.ERA.toFixed(2)}</td>
                   <td>{p.IP.toFixed(1)}</td><td>{p.H}</td><td>{p.R}</td><td>{p.ER}</td><td>{p.HR}</td>
-                  <td>{p.SO}</td><td>{p.K9.toFixed(2)}</td><td>{p.BB}</td><td>{p.BB9.toFixed(2)}</td><td>{p.WHIP.toFixed(2)}</td>
-                  <td>{isNaN(parseFloat(p.Chase)) ? "N/A" : parseFloat(p.Chase).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(p.Whiff)) ? "N/A" : parseFloat(p.Whiff).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(p.GB)) ? "N/A" : parseFloat(p.GB).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(p.FB)) ? "N/A" : parseFloat(p.FB).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(p.GF)) ? "N/A" : parseFloat(p.GF).toFixed(2)}</td>
+                  <td>{p.SO}</td><td>{parseFloat(p.K9).toFixed(2)}</td>
+                  <td>{p.BB}</td><td>{parseFloat(p.BB9).toFixed(2)}</td>
+                  <td>{parseFloat(p.WHIP).toFixed(2)}</td>
+                  <td>{parseFloat(p.Chase).toFixed(1)}</td>
+                  <td>{parseFloat(p.Whiff).toFixed(1)}</td>
+                  <td>{parseFloat(p.GB).toFixed(1)}</td>
+                  <td>{parseFloat(p.FB).toFixed(1)}</td>
+                  <td>{parseFloat(p.GF).toFixed(2)}</td>
                 </tr>
               ))}
               <tr className="player-detail-summary-row">
                 <td>Total</td>
                 <td>{teamData.W}</td><td>{teamData.L}</td><td>{teamData.ERA}</td><td>{teamData.IP}</td>
                 <td>{teamData.PH}</td><td>{teamData.R}</td><td>{teamData.ER}</td><td>{teamData.PHR}</td>
-                <td>{teamData.PSO}</td><td>{teamData.K9}</td><td>{teamData.PBB}</td><td>{teamData.BB9}</td><td>{teamData.WHIP}</td>
-                <td>{teamData.PChase}</td><td>{teamData.PWhiff}</td><td>{teamData.PGB}</td><td>{teamData.PFB}</td><td>{teamData.PGF}</td>
+                <td>{teamData.PSO}</td><td>{parseFloat(teamData.K9).toFixed(2)}</td>
+                <td>{teamData.PBB}</td><td>{parseFloat(teamData.BB9).toFixed(2)}</td>
+                <td>{parseFloat(teamData.WHIP).toFixed(2)}</td>
+                <td>{parseFloat(teamData.PChase).toFixed(1)}</td>
+                <td>{parseFloat(teamData.PWhiff).toFixed(1)}</td>
+                <td>{parseFloat(teamData.PGB).toFixed(1)}</td>
+                <td>{parseFloat(teamData.PFB).toFixed(1)}</td>
+                <td>{parseFloat(teamData.PGF).toFixed(2)}</td>
               </tr>
             </tbody>
           </table>

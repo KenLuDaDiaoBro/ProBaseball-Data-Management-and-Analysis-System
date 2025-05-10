@@ -9,6 +9,10 @@ function Home() {
         <Link to="/search">
           <button className="home-nav-button">Search</button>
         </Link>
+
+        <Link to="/leaderboard">
+          <button className="home-nav-button">Leaderboard</button>
+        </Link>
       </div>
     </div>
   );
