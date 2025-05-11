@@ -222,86 +222,6 @@ button:focus-visible {
   padding-bottom: 30px;
 }
 
-/* ========== 搜尋列 ========== */
-.player-detail-search-box {
-  position: absolute;
-  top: 42px;
-  right: 80px;
-  width: 250px;
-  display: flex;
-  flex-direction: column;
-  z-index: 1000;
-  box-sizing: border-box;
-}
-
-.player-detail-search-input {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 2px solid #007bff;
-  border-radius: 8px;
-  outline: none;
-  box-sizing: border-box;
-}
-.player-detail-search-input::placeholder {
-  color: #aaa;
-}
-.player-detail-search-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
-  background: #fff;
-  outline: none;
-}
-
-.player-detail-search-suggestions {
-  position: absolute;
-  top: calc(100% + 6px);     /* 緊貼 <input> 下面 */
-  left: 0;
-  right: 0;      /* 撐滿 wrapper 的 250px */
-  margin: 0;
-  padding: 0;
-  margin-top: 10px;
-  list-style: none;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 10;
-  overflow: hidden;
-  max-height: calc(5 * 45px); /* 正好放 5 筆 */
-  text-align: center;
-}
-
-.player-detail-search-suggestions li {
-  height: 45px;
-  line-height: 45px;
-  padding: 0 16px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: background-color 0.2s ease, color 0.2s ease;
-
-  /* 新增：粗一點的字重、同樣字型 */
-  font-family: 'Inter', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.player-detail-search-suggestions li:nth-child(odd) {
-  background: #f9f9f9;
-}
-
-/* 滑鼠經過 */
-.player-detail-search-suggestions li:hover {
-  background: #007bff;
-  color: #fff;
-  font-weight: 700;
-  transform: scale(1.05);
-}
-
 /* ========== 標題 ========== */
 .player-detail-player-name {
   position: absolute;
@@ -330,7 +250,7 @@ button:focus-visible {
 }
 
 .player-detail-year-select-dropdown {
-  padding: 8px 12px;
+  padding: 5px 10px;
   font-size: 16px;
   border: 2px solid #007bff;
   border-radius: 8px;
@@ -339,10 +259,6 @@ button:focus-visible {
   outline: none;
   cursor: pointer;
   transition: border-color 0.3s;
-}
-
-.player-detail-year-select-dropdown:hover,
-.player-detail-year-select-dropdown:focus { 
 }
 
 .player-detail-heatmap {
@@ -396,7 +312,7 @@ button:focus-visible {
   max-height: 400px;
   overflow-y: auto;
   margin-top: 20px;
-  margin-bottom: 60px; /* ✅ 加這一行製造空隙 */
+  margin-bottom: 60px;
 }
 
 .player-detail-stats-table {
@@ -435,12 +351,13 @@ button:focus-visible {
 .player-detail-stats-table tr.team-row td:nth-child(2),
 .player-detail-stats-table tr.team-row th:nth-child(2) {
   min-width: 80px;
-  white-space: nowrap; /* 不換行 */
+  white-space: nowrap;
 }
 
 .player-detail-stats-table td.player-detail-team-cell:hover {
   color: #0080FF;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .player-detail-summary-row {
@@ -595,6 +512,7 @@ button:focus-visible {
 .team-detail-stats-table td.player-link-button:hover {
   color: #0080FF;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .team-detail-summary-row {
@@ -602,6 +520,181 @@ button:focus-visible {
   font-weight: bold;
 }
 
+/* ============================= */
+/* ====== LeaderBoard 頁面 ====== */
+/* ============================= */
+.leader-board-container{
+  position: relative;
+  height: 99vh;
+  width: 99vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;      /* 保留，让内部内容水平居中 */
+  padding: 20px;
+  background: #f0f2f5;
+  box-sizing: border-box;
+}
+
+.leader-board-title {
+  font-size: 36px;
+  color: #555;
+  text-align: center;
+  margin-top: 120px;
+  margin-bottom: 60px;
+}
+
+.leader-board-year {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 80px;
+}
+.leader-board-year-select-label {
+  font-weight: 600;
+  color: #333;
+}
+.leader-board-year-select-dropdown {
+  padding: 5px 10px;
+  font-size: 16px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  background-color: white;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+.leader-board-year-select-dropdown:hover {
+  border-color: #0056b3;
+}
+
+/* 2. 美化下拉选项 */
+.leader-board-year-select-dropdown option {
+  background-color: #fff;
+  color: #333;
+  padding: 8px;
+  font-size: 16px;
+}
+
+.leader-board-more {
+  position: absolute;
+  top: 300px;
+  right: 175px;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* 打者 & 投手 外层并列 */
+.leader-board-flex {
+  display: flex;
+  justify-content: space-between;
+  gap: 150px;
+  width: 100%;              /* 让这一行本身拉满父容器 */
+  max-width: 1200px;         /* 并限制最大宽度，避免超出可读范围 */
+  margin: 0 auto;
+}
+
+/* 每个面板 */
+.leader-board-panel {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  width: 1000px;        /* 比之前大一点 */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 面板标题栏（Tabs） */
+.leader-board-panel-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+.leader-board-tab {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 14px;
+  color: #555;
+  background: #e9ecef;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.leader-board-tab.active {
+  background: #007bff;
+  color: #fff;
+}
+
+/* 排行列表 */
+.leader-board-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.leader-board-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+.leader-board-item:last-child {
+  border-bottom: none;
+}
+
+/* 排名数字 */
+.leader-board-rank {
+  width: 28px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-right: 8px;
+}
+.leader-board-rank.first {
+  color: #d4af37; /* 金色突出第一名 */
+}
+.leader-board-rank.second {
+  color: #c0c0c0;  /* 银色 */
+}
+.leader-board-rank.third {
+  color: #cd7f32;  /* 铜色 */
+}
+
+/* 球员名 & 球队 */
+.leader-board-player {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  font-size: 14px;
+  color: #333;
+}
+.leader-board-name {
+  font-size: 15px;
+}
+.leader-board-name:hover {
+  color: #0080FF;
+  text-decoration: none;
+  cursor: pointer;
+}
+.leader-board-team {
+  color: #777;
+  font-size: 12px;
+}
+
+/* 排行值 */
+.leader-board-value {
+  font-family: monospace;
+  font-size: 18px;
+  text-align: right;
+  min-width: 60px; /* 或根據需要設寬度 */
+  display: inline-block;
+}
 /* ========== 搜尋列 ========== */
 .search-box {
   position: fixed;
@@ -680,27 +773,6 @@ button:focus-visible {
   color: #fff;
   font-weight: 700;
   transform: scale(1.05);
-}
-
-/* ========== 按鈕 ========== */
-.player-detail-button {
-  margin-top: 20px;
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.player-detail-button-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.player-detail-button-primary:hover {
-  background-color: #0056b3;
 }
 
 /* ========== 其他圖標按鈕 ========== */

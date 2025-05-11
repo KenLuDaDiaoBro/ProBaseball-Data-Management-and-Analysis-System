@@ -320,7 +320,7 @@ def leaderboard():
             min_condition = f"IP >= {min_IP}"
 
         query = f"""
-            SELECT Name, {metric}
+            SELECT Name, Team, {metric}
             FROM {type}
             WHERE Year = %s AND {min_condition}
             ORDER BY `{metric}` {sort_order}

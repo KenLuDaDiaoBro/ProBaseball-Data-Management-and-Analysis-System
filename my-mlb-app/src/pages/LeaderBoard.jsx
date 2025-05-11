@@ -1,24 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useParams, useNavigate } from "react-router-dom";
 
-const metricsByType = {
-    batter: ['H', 'HR', 'RBI', 'AVG', 'OBP', 'OPS', 'SB'],
-    pitcher: ['ERA', 'WHIP', 'SO', 'BB', 'K9', 'BB9', 'W', 'L']
-};
+const BATTER_TABS = [
+  { key: "AVG",  label: "打擊率" },
+  { key: "H",    label: "安打"   },
+  { key: "HR",   label: "全壘打" },
+  { key: "RBI",  label: "打點"   },
+  { key: "SB",   label: "盜壘"   },
+];
+const PITCHER_TABS = [
+  { key: "ERA",  label: "ERA"   },
+  { key: "W",    label: "勝投"   },
+  { key: "SO",   label: "三振"   },
+  { key: "WHIP", label: "WHIP"  },
+  { key: "K9",   label: "K/9"   },
+];
 
 function LeaderBoard() {
-    const [type, setType] = useState('batter');
     const [year, setYear] = useState(2024);
-    const [metric, setMetric] = useState(metricsByType.batter[0]);
-    const [leaders, setLeaders] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [batTab, setBatTab] = useState(BATTER_TABS[0].key);
+    const [pitTab, setPitTab] = useState(PITCHER_TABS[0].key);
+    const [batLeaders, setBatLeaders] = useState([]);
+    const [pitLeaders, setPitLeaders] = useState([]);
     const navigate = useNavigate();
   
     const [players, setPlayers] = useState([]);
     const [teams, setTeams] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredOptions, setFilteredOptions] = useState([]);
+
+    const formatStat = (key, value) => {
+        if (typeof value !== "number") return value;
+
+        const threeDecimalStats = ["AVG"];
+        const twoDecimalStats = ["ERA", "WHIP", "K9"];
+        const integerStats = ["HR", "RBI", "SB", "W", "SO", "H"];
+
+        if (threeDecimalStats.includes(key)) return value.toFixed(3);
+        if (twoDecimalStats.includes(key)) return value.toFixed(2);
+        if (integerStats.includes(key)) return Math.round(value);
+
+        return value;
+    };
+
+    function dedupe(data) {
+        const map = {};
+        data.forEach(item => {
+        const name = item.Name;
+        if (item.Team.includes("Teams")) {
+            // 覆盖之前的
+            map[name] = item;
+        } else {
+            if (!map[name]) {
+            map[name] = item;
+            }
+        }
+        });
+        // 保持原有顺序
+        return data
+        .map(item => map[item.Name])
+        .filter(Boolean)
+        // 去重
+        .filter((v,i,arr) => arr.findIndex(x=>x.Name===v.Name)===i);
+    }
 
     useEffect(() => {
         fetch("http://127.0.0.1:5000/api/players")
@@ -87,17 +131,51 @@ function LeaderBoard() {
     };
 
     useEffect(() => {
-        fetch(`http://127.0.0.1:5000/api/leaderboard?type=${type}&year=${year}&metric=${metric}`)
-            .then(res => res.json())
-            .then(data => setLeaders(data))
-            .catch(console.error);
-    }, [type, year, metric]);
+        fetch(
+        `http://127.0.0.1:5000/api/leaderboard?type=batter&year=${year}&metric=${batTab}`
+        )
+        .then((r) => r.json())
+        .then(data => {
+            const cleaned = dedupe(data);
+            setBatLeaders(cleaned.slice(0, 5));
+        })
+        .catch(console.error);
+    }, [year, batTab]);
 
-    const handleTypeChange = (e) => {
-        const newType = e.target.value;
-        setType(newType);
-        setMetric(metricsByType[newType][0]);
-    };
+  // 拿投手排行
+    useEffect(() => {
+        fetch(
+        `http://127.0.0.1:5000/api/leaderboard?type=pitcher&year=${year}&metric=${pitTab}`
+        )
+        .then((r) => r.json())
+        .then(data => {
+            const cleaned = dedupe(data);
+            setPitLeaders(cleaned.slice(0, 5));
+        })
+        .catch(console.error);
+    }, [year, pitTab]);
+
+    const handlePlayerClick = (name, team, year) => {
+    fetch(
+      `http://127.0.0.1:5000/api/player_lookup?` +
+      new URLSearchParams({ name, team, year})
+    )
+      .then((r) => {
+        if (!r.ok) throw new Error("Not found");
+        return r.json();
+      })
+      .then((data) => {
+        if (data.id) {
+          navigate(`/playerDetail/${data.id}`);
+        } else {
+          console.error("No id returned");
+        }
+      })
+      .catch((err) => {
+        console.error("Lookup error:", err);
+        alert("找不到這位球員的詳細資料");
+      });
+  };
 
     return (
         <div className="leader-board-container">
@@ -126,7 +204,7 @@ function LeaderBoard() {
                     <li
                         key={i}
                         className="search-suggestion-item"
-                        onClick={() => handleSelectOption(opt)}  // ← 呼叫改成 handleSelectOption
+                        onClick={() => handleSelectOption(opt)}
                     >
                         {opt.type === "player" ? opt.Name : opt.code}
                     </li>
@@ -134,55 +212,101 @@ function LeaderBoard() {
                 </ul>
             )}
             </div>
-            <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Leaderboard</h1>
 
-            <div className="flex gap-4 mb-4">
-                <select value={type} onChange={handleTypeChange} className="p-2 border rounded">
-                <option value="batter">Batter</option>
-                <option value="pitcher">Pitcher</option>
+            <h1 className="leader-board-title">TOP5 排行</h1>
+            <div className="leader-board-year">
+                <label htmlFor="yearSelect" className="leader-board-year-select-label">Select Year:</label>
+                <select
+                    value={year}
+                    onChange={(e) => setYear(+e.target.value)}
+                    className="leader-board-year-select-dropdown">
+                    <option key='2024' value='2024'>2024</option>
+                    <option key='2023' value='2023'>2023</option>
+                    <option key='2022' value='2022'>2022</option>
+                    <option key='2021' value='2021'>2021</option>
                 </select>
-
-                <select value={year} onChange={(e) => setYear(parseInt(e.target.value))} className="p-2 border rounded">
-                {Array.from({ length: 10 }, (_, i) => {
-                    const y = 2024 - i;
-                    return (
-                    <option key={y} value={y}>{y}</option>
-                    );
-                })}
-                </select>
-
-                <select value={metric} onChange={(e) => setMetric(e.target.value)} className="p-2 border rounded">
-                {metricsByType[type].map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                ))}
-                </select>
+                <span
+                    className="leader-board-more"
+                    onClick={() => navigate("/leaderboard")}
+                >
+                    More →
+                </span>
             </div>
 
-            {loading ? (
-                <p>Loading...</p>
-            ) : (
-                <table className="min-w-full border">
-                <thead>
-                    <tr className="bg-gray-100">
-                    <th className="border px-4 py-2">Rank</th>
-                    <th className="border px-4 py-2">Name</th>
-                    <th className="border px-4 py-2">{metric}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {leaders.map((player, index) => (
-                    <tr key={index} className="text-center">
-                        <td className="border px-4 py-2">{index + 1}</td>
-                        <td className="border px-4 py-2">{player.Name}</td>
-                        <td className="border px-4 py-2">{player[metric]}</td>
-                    </tr>
-                    ))}
-                </tbody>
-                </table>
-            )}
+            <div className="leader-board-flex">
+                {/* 打者排行榜 */}
+                <div className="leader-board-panel">
+                    <div className="leader-board-panel-header">
+                        {BATTER_TABS.map(t => (
+                        <button
+                            key={t.key}
+                            className={`leader-board-tab ${batTab === t.key ? "active" : ""}`}
+                            onClick={() => setBatTab(t.key)}
+                        >
+                            {t.label}
+                        </button>
+                        ))}
+                    </div>
+                    <ul className="leader-board-list">
+                        {batLeaders.map((p, i) => (
+                        <li key={`batter-${p.Name}-${i}`} className="leader-board-item">
+                            <div className={`leader-board-rank ${i===0?'first':i===1?'second':i===2?'third':''}`}>{i + 1}</div>
+                            <div className="leader-board-player">
+                            <span className="leader-board-name"
+                                onClick={() =>
+                                    handlePlayerClick(
+                                        p.Name,
+                                        p.Team,
+                                        year
+                                    )
+                            }>
+                                {p.Name}
+                            </span>
+                            <span className="leader-board-team">（{p.Team}）</span>
+                            </div>
+                            <div className="leader-board-value">{formatStat(batTab, p[batTab])}</div>
+                        </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {/* 投手排行榜 */}
+                <div className="leader-board-panel">
+                    <div className="leader-board-panel-header">
+                        {PITCHER_TABS.map(t => (
+                        <button
+                            key={t.key}
+                            className={`leader-board-tab ${pitTab === t.key ? "active" : ""}`}
+                            onClick={() => setPitTab(t.key)}
+                        >
+                            {t.label}
+                        </button>
+                        ))}
+                    </div>
+                    <ul className="leader-board-list">
+                        {pitLeaders.map((p, i) => (
+                        <li key={`pitcher-${p.Name}-${i}`} className="leader-board-item">
+                            <div className={`leader-board-rank ${i===0?'first':i===1?'second':i===2?'third':''}`}>{i + 1}</div>
+                            <div className="leader-board-player">
+                            <span className="leader-board-name"
+                                onClick={() =>
+                                    handlePlayerClick(
+                                        p.Name,
+                                        p.Team,
+                                        year
+                                    )
+                            }>
+                                {p.Name}
+                            </span>
+                            <span className="leader-board-team">（{p.Team}）</span>
+                            </div>
+                            <div className="leader-board-value">{formatStat(pitTab, p[pitTab])}</div>
+                        </li>
+                        ))}
+                    </ul>
+                </div>
             </div>
-        </div>  
+        </div>
     );
 }
 
