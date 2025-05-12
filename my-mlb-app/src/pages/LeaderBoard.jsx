@@ -227,7 +227,7 @@ function LeaderBoard() {
                 </select>
                 <span
                     className="leader-board-more"
-                    onClick={() => navigate("/leaderboard")}
+                    onClick={() => navigate("/LeaderBoardDetail")}
                 >
                     More →
                 </span>
