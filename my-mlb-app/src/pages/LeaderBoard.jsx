@@ -122,7 +122,7 @@ function LeaderBoard() {
     
     const handleSelectOption = (opt) => {
         setSearchTerm("");
-        setFilteredOptions([]);      // ← 這裡清空 filteredOptions
+        setFilteredOptions([]);
         if (opt.type === "player") {
         navigate(`/playerDetail/${opt.id}`);
         } else {
@@ -137,7 +137,7 @@ function LeaderBoard() {
         .then((r) => r.json())
         .then(data => {
             const cleaned = dedupe(data);
-            setBatLeaders(cleaned.slice(0, 5));
+            setBatLeaders(cleaned.slice(0, 10));
         })
         .catch(console.error);
     }, [year, batTab]);
@@ -150,7 +150,7 @@ function LeaderBoard() {
         .then((r) => r.json())
         .then(data => {
             const cleaned = dedupe(data);
-            setPitLeaders(cleaned.slice(0, 5));
+            setPitLeaders(cleaned.slice(0, 10));
         })
         .catch(console.error);
     }, [year, pitTab]);
@@ -213,7 +213,7 @@ function LeaderBoard() {
             )}
             </div>
 
-            <h1 className="leader-board-title">TOP5 排行</h1>
+            <h1 className="leader-board-title">TOP10</h1>
             <div className="leader-board-year">
                 <label htmlFor="yearSelect" className="leader-board-year-select-label">Select Year:</label>
                 <select

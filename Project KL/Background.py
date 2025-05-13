@@ -78,9 +78,8 @@ def get_all_players_stats():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        game = 162
-        min_PA = game * 3
-        min_IP = game
+        min_PA = 324
+        min_IP = 81
         
         # 打者數據
         batter_query = f'''
@@ -294,21 +293,37 @@ def leaderboard():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         
-        game = 162
         if type == 'batter':
-            min_PA = game * 3
+            min_PA = 324
             min_condition = f"PA >= {min_PA}"
         else:
-            min_IP = game
+            min_IP = 81
             min_condition = f"IP >= {min_IP}"
 
         query = f"""
-            SELECT Name, Team, {metric}
-            FROM {type}
-            WHERE Year = %s AND {min_condition}
-            ORDER BY `{metric}` {sort_order}
-            LIMIT 50
+        WITH filtered AS (
+            SELECT Name, ID, Team, `{metric}`
+            FROM `{type}`
+            WHERE Year = %s
+              AND {min_condition}
+        ),
+        deduped AS (
+            SELECT
+              Name, ID, Team, `{metric}`,
+              ROW_NUMBER() OVER (
+                PARTITION BY Name
+                ORDER BY 
+                  CASE WHEN Team LIKE '%Teams%' THEN 1 ELSE 2 END
+              ) AS rn
+            FROM filtered
+        )
+        SELECT Name, ID, Team, `{metric}`
+        FROM deduped
+        WHERE rn = 1
+        ORDER BY `{metric}` {sort_order}
+        LIMIT 50
         """
+        
         cursor.execute(query, (year,))
         results = cursor.fetchall()
 

@@ -135,7 +135,23 @@ function PlayerDetail() {
           console.error("Error fetching stats:", error);
         });
     }
-  }, [selectedYear]); // ✅ 修改：依賴 selectedYear
+  }, [selectedYear]);
+
+  const currentStat = playerData.find(p => Number(p.Year) === Number(selectedYear));
+
+  // Decide qualification
+  const minThreshold = currentStat
+    ? (currentStat.Type === 'Batter' ? 324 : 243) // 162 * 2 : 81 * 3
+    : null;
+
+  const actualValue = currentStat
+    ? (currentStat.Type === 'Batter'
+        ? Number(currentStat.PA)
+        : parseIP(currentStat.IP))
+    : null;
+
+  const qualifies = ((minThreshold !== null) && (actualValue >= minThreshold));
+
 
   const getGaugeData = () => {
     if (!players.length || !playerData.length || !allPlayersData.length) return [];
@@ -154,7 +170,6 @@ function PlayerDetail() {
       fields = ["ERA", "WHIP", "K9", "BB9"];
       lowerIsBetter = { ERA: true, WHIP: true, BB9: true, K9: false };
     }
-
   
     return fields.map((field) => {
       const currentValue = parseFloat(current[field]);
@@ -180,8 +195,6 @@ function PlayerDetail() {
   };
 
   const gaugeData = getGaugeData();
-
-  const currentStat = playerData.find(p => Number(p.Year) === Number(selectedYear));
 
   const getBatterSummary = () => {
     const summary = {
@@ -374,13 +387,17 @@ function PlayerDetail() {
         {gaugeData.map((item, index) => (
           <div className="player-detail-gauge-item" key={index}>
             <CircularProgressbarWithChildren
-              value={item.percent}
+              value={qualifies ? gaugeData[index].percent : 100}
               styles={buildStyles({
-                pathColor: getColorByPercent(item.percent),
-                trailColor: "#d1d5db"
+                pathColor: qualifies
+                  ? getColorByPercent(item.percent)
+                  : '#9ca3af',
+                trailColor: '#d1d5db'
               })}
             >
-              <div className="player-detail-gauge-percent">{item.percent}</div>
+              <div className="player-detail-gauge-percent">
+                {qualifies ? gaugeData[index].percent : 'NQ'}
+              </div>
               <strong className="player-detail-gauge-label">{item.field}</strong>
             </CircularProgressbarWithChildren>
           </div>

@@ -34,7 +34,6 @@ body {
   display: flex;
   place-items: center;
   min-width: 320px;
-  overflow-y: scroll;
 }
 
 h1 {
@@ -216,9 +215,11 @@ button:focus-visible {
 /* ============================= */
 .player-detail-container {
   height: 100vh;
+  weight: 100vw;
   background: none;
   box-shadow: none;
   border: none;
+  background: #f0f2f5;
   padding-bottom: 30px;
 }
 
@@ -377,6 +378,7 @@ button:focus-visible {
   padding-top: 80px;
   min-height: 100vh;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .team-detail-title {
@@ -525,30 +527,32 @@ button:focus-visible {
 /* ============================= */
 .leader-board-container{
   position: relative;
-  height: 99vh;
-  width: 99vw;
+  height: 100vh;
+  width: 100vw;
   display: flex;
   flex-direction: column;
   align-items: center;      /* 保留，让内部内容水平居中 */
   padding: 20px;
   background: #f0f2f5;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .leader-board-title {
   font-size: 36px;
   color: #555;
   text-align: center;
-  margin-top: 120px;
-  margin-bottom: 60px;
+  margin-top: 90px;
+  margin-bottom: 50px;
 }
 
 .leader-board-year {
+  position: absolute;
   display: flex;
-  justify-content: center;
+  top: 150px;
+  left: 180px;
   align-items: center;
   gap: 24px;
-  margin-bottom: 80px;
 }
 .leader-board-year-select-label {
   font-weight: 600;
@@ -569,7 +573,6 @@ button:focus-visible {
   border-color: #0056b3;
 }
 
-/* 2. 美化下拉选项 */
 .leader-board-year-select-dropdown option {
   background-color: #fff;
   color: #333;
@@ -578,9 +581,9 @@ button:focus-visible {
 }
 
 .leader-board-more {
-  position: absolute;
-  top: 300px;
-  right: 175px;
+  position: relative;
+  top: 10px;
+  left: 870px;
   color: #007bff;
   cursor: pointer;
   font-size: 18px;
@@ -591,8 +594,8 @@ button:focus-visible {
   display: flex;
   justify-content: space-between;
   gap: 150px;
-  width: 100%;              /* 让这一行本身拉满父容器 */
-  max-width: 1200px;         /* 并限制最大宽度，避免超出可读范围 */
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -602,7 +605,7 @@ button:focus-visible {
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  width: 1000px;        /* 比之前大一点 */
+  width: 1000px;
   padding: 20px;
   box-sizing: border-box;
 }
