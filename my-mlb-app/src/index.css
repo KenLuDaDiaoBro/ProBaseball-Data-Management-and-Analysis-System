@@ -77,33 +77,29 @@ button:focus-visible {
 /* ========= Home 頁面 ========= */
 /* ============================= */
 
-/* 首頁整體置中 */
 .home-container {
-  width: 100vw; /* 佔滿整個視窗寬度 */
-  height: 100vh; /* 佔滿整個視窗高度 */
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  background-color: #f8f9fa; /* 設定背景色 */
+  background-color: #f8f9fa;
 }
 
-/* 標題 */
 .home-title {
   font-size: 36px;
   font-weight: bold;
   color: #333;
 }
 
-/* 介紹文字 */
 .home-description {
   font-size: 18px;
   color: #555;
   margin-bottom: 20px;
 }
 
-/* 前往搜尋的按鈕 */
 .home-nav-button {
   background-color: #007bff;
   color: white;
@@ -184,7 +180,6 @@ button:focus-visible {
               color 0.2s ease;
 }
 
-/* 奇偶條紋 */
 .player-search-suggestions li:nth-child(odd) {
   background: #f9f9f9;
 }
@@ -199,15 +194,15 @@ button:focus-visible {
 
 .player-search-title {
   display: block;
-  width: 250px;        /* 和输入框同宽 */
-  margin: 0 auto 8px;  /* 底部留一点空隙 */
+  width: 250px;
+  margin: 0 auto 8px;
   font-size: 48px;
   font-weight: 700;
   text-align: center;
   
   /* 往上微调 */
   position: relative;
-  top: -110px;          /* 你可以把 20 改成自己想要的数值 */
+  top: -110px;
 }
 
 /* ============================= */
@@ -271,7 +266,6 @@ button:focus-visible {
   align-items: center;
 }
 
-/* 熱區圖上方的小標 */
 .player-detail-heatmap-title {
   text-align: center;
   font-size: 1.25rem;
@@ -424,7 +418,7 @@ button:focus-visible {
 
 .team-detail-rank-cell {
   position: relative;
-  background: #c5ab89; /* 深灰色背景 */
+  background: #c5ab89;
   padding: 6px 8px;  
   border-radius: 8px;
   color: #fff;
@@ -466,7 +460,7 @@ button:focus-visible {
   position: absolute;
   top: 15px;
   right: 12px;
-  font-size: 30px;        /* 比之前小一点 */
+  font-size: 30px;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -531,7 +525,7 @@ button:focus-visible {
   width: 100vw;
   display: flex;
   flex-direction: column;
-  align-items: center;      /* 保留，让内部内容水平居中 */
+  align-items: center;
   padding: 20px;
   background: #f0f2f5;
   box-sizing: border-box;
@@ -589,7 +583,6 @@ button:focus-visible {
   font-size: 18px;
 }
 
-/* 打者 & 投手 外层并列 */
 .leader-board-flex {
   display: flex;
   justify-content: space-between;
@@ -599,7 +592,6 @@ button:focus-visible {
   margin: 0 auto;
 }
 
-/* 每个面板 */
 .leader-board-panel {
   flex: 1;
   background: #ffffff;
@@ -610,7 +602,6 @@ button:focus-visible {
   box-sizing: border-box;
 }
 
-/* 面板标题栏（Tabs） */
 .leader-board-panel-header {
   display: flex;
   gap: 8px;
@@ -633,7 +624,6 @@ button:focus-visible {
   color: #fff;
 }
 
-/* 排行列表 */
 .leader-board-list {
   list-style: none;
   padding: 0;
@@ -649,7 +639,6 @@ button:focus-visible {
   border-bottom: none;
 }
 
-/* 排名数字 */
 .leader-board-rank {
   width: 28px;
   text-align: center;
@@ -659,16 +648,15 @@ button:focus-visible {
   margin-right: 8px;
 }
 .leader-board-rank.first {
-  color: #d4af37; /* 金色突出第一名 */
+  color: #d4af37;
 }
 .leader-board-rank.second {
-  color: #c0c0c0;  /* 银色 */
+  color: #c0c0c0;
 }
 .leader-board-rank.third {
-  color: #cd7f32;  /* 铜色 */
+  color: #cd7f32;
 }
 
-/* 球员名 & 球队 */
 .leader-board-player {
   flex: 1;
   display: flex;
@@ -690,12 +678,11 @@ button:focus-visible {
   font-size: 12px;
 }
 
-/* 排行值 */
 .leader-board-value {
   font-family: monospace;
   font-size: 18px;
   text-align: right;
-  min-width: 60px; /* 或根據需要設寬度 */
+  min-width: 60px;
   display: inline-block;
 }
 /* ========== 搜尋列 ========== */

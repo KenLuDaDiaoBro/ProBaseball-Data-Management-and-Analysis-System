@@ -338,7 +338,7 @@ function PlayerDetail() {
               <li
                 key={i}
                 className="search-suggestion-item"
-                onClick={() => handleSelectOption(opt)}  // ← 呼叫改成 handleSelectOption
+                onClick={() => handleSelectOption(opt)}
               >
                 {opt.type === "player" ? opt.Name : opt.code}
              </li>

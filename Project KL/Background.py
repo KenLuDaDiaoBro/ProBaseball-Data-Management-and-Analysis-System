@@ -48,7 +48,6 @@ def get_teams():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        # 取 pitcher, batter 兩張表的所有 distinct Team，並做 union
         cursor.execute(
             "SELECT DISTINCT Team FROM pitcher "
             "UNION "
@@ -56,7 +55,6 @@ def get_teams():
         )
         rows = cursor.fetchall()
 
-        # 把空值、含 'Teams' 的字串過濾掉，然後去重排序
         codes = sorted({
             r[0] for r in rows
             if r[0] and "Teams" not in r[0]
@@ -72,7 +70,7 @@ def get_teams():
 
 @app.route('/api/players_stats', methods=['GET'])
 def get_all_players_stats():
-    year = request.args.get('year')  # 從 URL 參數取得 year，例如 ?year=2023
+    year = request.args.get('year')
 
     try:
         conn = mysql.connector.connect(**db_config)
@@ -81,7 +79,6 @@ def get_all_players_stats():
         min_PA = 324
         min_IP = 81
         
-        # 打者數據
         batter_query = f'''
             SELECT 
             Name, Year, Team, Type, PA, AB, H, H2, H3, HR, RBI, SO, BB, SB, CS, 
@@ -92,7 +89,6 @@ def get_all_players_stats():
         cursor.execute(batter_query, (year,))
         batters = cursor.fetchall()
 
-        # 投手數據
         pitcher_query = f'''
             SELECT 
             Name, Year, Team, Type, W, L, ERA, IP, H, R, ER, HR, BB, BB9, SO, K9, WHIP, 

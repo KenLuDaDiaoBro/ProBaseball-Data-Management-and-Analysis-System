@@ -41,7 +41,6 @@ function TeamDetail() {
         return;
       }
     
-      // 1. 球員打分
       const scoredPlayers = players
         .map((p) => {
           const name = p.Name.toLowerCase();
@@ -52,7 +51,6 @@ function TeamDetail() {
         })
         .filter((p) => p.score > 0);
     
-      // 2. 球隊打分
       const scoredTeams = teams
         .map((t) => {
           const code = t.code.toLowerCase();
@@ -63,11 +61,9 @@ function TeamDetail() {
         })
         .filter((t) => t.score > 0);
     
-      // 3. 合併、排序、取前 5
       const combined = [...scoredPlayers, ...scoredTeams]
         .sort((a, b) => {
           if (b.score !== a.score) return b.score - a.score;
-          // 同分就按名字/代號
           const aKey = a.type === 'player' ? a.Name : a.code;
           const bKey = b.type === 'player' ? b.Name : b.code;
           return aKey.localeCompare(bKey);
@@ -80,7 +76,7 @@ function TeamDetail() {
 
     const handleSelectOption = (opt) => {
       setSearchTerm("");
-      setFilteredOptions([]);      // ← 這裡清空 filteredOptions
+      setFilteredOptions([]);
       if (opt.type === "player") {
        navigate(`/playerDetail/${opt.id}`);
       } else {
@@ -111,7 +107,6 @@ function TeamDetail() {
   }, [selectedYear]);
 
   const teamData = useMemo(() => {
-    // 找到該隊全年累計數據
     return leagueStats.find(t => t.Team === code) || {};
   }, [leagueStats, code]);
 
@@ -217,7 +212,6 @@ function TeamDetail() {
       {/* ====== 排名小卡 2×4 ====== */}
       <div className="team-detail-rank-grid">
         {METRICS.map(m => {
-          // 這邊用 teamData 取值，不會再直接呼叫 find
           const stat = teamData[m];
           const rank = teamRanks[m] || 31; 
           const pct = ((31 - rank) / 30) * 100;
@@ -237,7 +231,7 @@ function TeamDetail() {
                   className="team-detail-metric-bar-fill"
                   style={{
                     width: `${pct}%`,
-                    backgroundColor: teamColor || "#888", // fallback 顏色
+                    backgroundColor: teamColor || "#888",
                   }}
                 />
               </div>
@@ -248,8 +242,6 @@ function TeamDetail() {
           );
         })}
       </div>
-
-      {/* ====== 資料表格 ====== */}
 
       <div className="team-detail-stats-wrapper">
         <h2 className="team-detail-subtitle">Batters</h2>
