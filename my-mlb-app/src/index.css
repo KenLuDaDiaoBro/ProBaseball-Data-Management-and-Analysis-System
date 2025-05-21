@@ -339,6 +339,14 @@ button:focus-visible {
   background-color: white;
 }
 
+.player-detail-stats-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.player-detail-stats-table tr:hover {
+  background-color: #e6f7ff;
+}
+
 .player-detail-stats-table tr.team-row {
   background-color:rgb(225, 233, 243);
 }
@@ -505,6 +513,14 @@ button:focus-visible {
   font-weight: 600;
 }
 
+.team-detail-stats-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.team-detail-stats-table tr:hover {
+  background-color: #e6f7ff;
+}
+
 .team-detail-stats-table td.player-link-button:hover {
   color: #0080FF;
   text-decoration: none;
@@ -629,12 +645,18 @@ button:focus-visible {
   padding: 0;
   margin: 0;
 }
+
 .leader-board-item {
   display: flex;
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid #eee;
 }
+
+.leader-board-item:hover {
+  background-color: #e6f7ff;
+}
+
 .leader-board-item:last-child {
   border-bottom: none;
 }
@@ -673,9 +695,21 @@ button:focus-visible {
   text-decoration: none;
   cursor: pointer;
 }
+
 .leader-board-team {
   color: #777;
   font-size: 12px;
+}
+
+.leader-board-team-clickable-team {
+  color: #777;
+  font-size: 12px;
+}
+
+.leader-board-team-clickable-team:hover {
+    color: #0080FF;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .leader-board-value {
@@ -685,6 +719,106 @@ button:focus-visible {
   min-width: 60px;
   display: inline-block;
 }
+
+/* ============================= */
+/* ===== LeaderBoardDetail 頁面 ===== */
+/* ============================= */
+
+.leaderboard-detail-container {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #f0f2f5;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.leaderboard-detail-title {
+  margin-top: 80px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 600;
+  color: #333;
+}
+
+.leaderboard-detail-filters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.leaderboard-detail-filters label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.leaderboard-detail-filters select {
+  padding: 6px 12px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.leaderboard-detail-filters select:hover {
+  border-color: #646cff;
+}
+
+.leaderboard-detail-table-wrapper {
+  width: 100%;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.leaderboard-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  color: #333;
+  background: #fff;
+}
+
+.leaderboard-detail-table th,
+.leaderboard-detail-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.leaderboard-detail-table th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.leaderboard-detail-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.leaderboard-detail-table tr:hover {
+  background-color: #e6f7ff;
+}
+
+.leaderboard-detail-clickable-cell:hover {
+  color: #0080ff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
 /* ========== 搜尋列 ========== */
 .search-box {
   position: fixed;

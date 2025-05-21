@@ -249,11 +249,174 @@ function TeamDetail() {
           <table className="team-detail-stats-table">
             <thead>
               <tr>
-                <th>Player</th><th>PA</th><th>AB</th><th>H</th>
-                <th>2B</th><th>3B</th><th>HR</th><th>RBI</th><th>SO</th>
-                <th>BB</th><th>SB</th><th>CS</th><th>AVG</th><th>OBP</th>
-                <th>SLG</th><th>OPS</th><th>Chase%</th><th>Whiff%</th><th>GB</th>
-                <th>FB</th><th>G/F</th><th>Sprint</th>
+                <th>Player</th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=PA`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  PA
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=AB`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  AB
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=H`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  H
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=H2`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  2B
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=H3`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  3B
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=HR`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  HR
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=RBI`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  RBI
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=SO`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  SO
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=BB`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  BB
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=SB`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  SB
+                </th><th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=CS`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  CS
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=AVG`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  AVG
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=OBP`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  OBP
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=SLG`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  SLG
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=OPS`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  OPS
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=Chase`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Chase%
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=Whiff`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Whiff%
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=GB`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  GB
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=FB`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  FB
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=GF`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  G/F
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=Sprint`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Sprint
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -309,10 +472,139 @@ function TeamDetail() {
           <table className="team-detail-stats-table">
             <thead>
               <tr>
-                <th>Name</th><th>W</th><th>L</th><th>ERA</th>
-                <th>IP</th><th>H</th><th>R</th><th>ER</th><th>HR</th>
-                <th>SO</th><th>K9</th><th>BB</th><th>BB9</th><th>WHIP</th>
-                <th>Chase%</th><th>Whiff%</th><th>GB</th><th>FB</th><th>G/F</th>
+                <th>Name</th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=W`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  W
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=L`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  L
+                </th>
+                <th>
+                  ERA
+                </th>
+                <th>IP</th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=H`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  H
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=R`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  R
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=ER`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  ER
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=HR`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  HR
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=SO`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  SO
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=K9`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  K/9
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=BB`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  BB
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=BB9`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  BB/9
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=WHIP`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  WHIP
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=Chase`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Chase%
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=Whiff`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Whiff%
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=GB`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  GB
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=FB`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  FB
+                </th>
+                <th
+                  onClick={() => navigate(
+                    `/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=GF`
+                  )}
+                  style={{ cursor: 'pointer' }}
+                >
+                  G/F
+                </th>
               </tr>
             </thead>
             <tbody>

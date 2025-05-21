@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import mysql.connector
+from collections import OrderedDict
 
 app = Flask(__name__)
 CORS(app)  # 允許 React 前端請求 API
@@ -43,7 +44,6 @@ def get_players():
     
 @app.route("/api/teams", methods=["GET"])
 def get_teams():
-    """回傳所有在 pitcher/batter 兩張表中出現過且不含 'Teams' 的 distinct Team 代號"""
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
@@ -101,8 +101,24 @@ def get_all_players_stats():
 
         cursor.close()
         conn.close()
+        
+        # 3. 針對每個打者 Name 分組，保留合併列（Team 含 "Teams"）若存在，否則保留所有該球員紀錄
+        groups = OrderedDict()
+        for b in batters:
+            groups.setdefault(b['Name'], []).append(b)
 
-        all_stats = batters + pitchers
+        batters_deduped = []
+        for records in groups.values():
+            # 找出合併（aggregated）那筆
+            agg = next((r for r in records if 'Teams' in r.get('Team', '')), None)
+            if agg:
+                batters_deduped.append(agg)
+            else:
+                # 如果沒有合併列，就把所有該球員的單隊紀錄都顯示
+                batters_deduped.extend(records)
+        
+        # 4. 最終回傳：先打者，再投手
+        all_stats = batters_deduped + pitchers
         return jsonify(all_stats)
 
     except mysql.connector.Error as err:
