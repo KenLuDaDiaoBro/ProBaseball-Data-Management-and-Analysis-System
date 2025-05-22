@@ -184,7 +184,6 @@ function LeaderBoardDetail() {
         }
     };
 
-    // 對陣列進行淺拷貝＋排序
     // 2. 實作排序函式
     const sortArray = (arr, key, order) => {
         return [...arr].sort((a, b) => {
@@ -213,22 +212,20 @@ function LeaderBoardDetail() {
         fetch(endpoint)
         .then(r => r.json())
         .then(json => {
-            // —— 先做 type 篩選
+            // 先做 type 篩選
             let arr = json
             if (type === "batter" || type === "pitcher") {
                 arr = json.filter(item => String(item.Type).toLowerCase() === type);
             }
-            // 依 type 決定預設排序欄位=
-            setSortKey(initSortKey);
+            const defaultKey = type === 'pitcher' ? 'W' : 'PA';
+            setSortKey(defaultKey);
             setSortOrder("desc");
-            // 排序後再存 data
-            setData(sortArray(arr, initSortKey, "desc"));
+            setData(sortArray(arr, defaultKey, "desc"));
         })
         .catch(console.error)
         .finally(() => setLoading(false));
     }, [type, year]);
 
-    // 點欄位時切換升／降、並重新排序
     // 4. 點欄位時切換升／降、並重新排序
     const handleSort = (key) => {
     // 如果連續點同一個 key，從降 → 升；否則都設成降
@@ -302,7 +299,14 @@ function LeaderBoardDetail() {
 
             <div className="leaderboard-detail-filters">
                 <label>Type:
-                    <select value={type} onChange={e=>setType(e.target.value)}>
+                    <select value={type} onChange={e => {
+                        const newType = e.target.value;
+                        setType(newType);
+                        // 切到 pitcher 就預設 W，others 就 PA
+                        const defaultKey = newType === 'pitcher' ? 'W' : 'PA';
+                        setSortKey(defaultKey);
+                        setSortOrder('desc');
+                    }}>
                         {TYPE_OPTIONS.map(o=>(
                         <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
@@ -312,7 +316,7 @@ function LeaderBoardDetail() {
                 <label style={{ marginLeft: 16 }}>
                     Year:&nbsp;
                     <select value={year} onChange={e => setYear(+e.target.value)}>
-                        {[...Array(5)].map((_, i) => {
+                        {[...Array(4)].map((_, i) => {
                         const y = 2024 - i;
                         return <option key={y} value={y}>{y}</option>;
                         })}
