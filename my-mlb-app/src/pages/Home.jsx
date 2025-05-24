@@ -13,6 +13,10 @@ function Home() {
         <Link to="/leaderboard">
           <button className="home-nav-button">Leaderboard</button>
         </Link>
+
+        <Link to="/MatchUp">
+          <button className="home-nav-button">Match Up</button>
+        </Link>
       </div>
     </div>
   );

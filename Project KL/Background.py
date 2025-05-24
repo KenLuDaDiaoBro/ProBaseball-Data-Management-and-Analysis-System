@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import mysql.connector
 from collections import OrderedDict
+from fetch_matchup import get_matchup
 
 app = Flask(__name__)
 CORS(app)  # 允許 React 前端請求 API
@@ -282,70 +283,19 @@ def player_lookup():
     else:
         return jsonify({"error": "Player not found"}), 404
     
-@app.route('/api/leaderboard', methods=['GET'])
-def leaderboard():
-    type = request.args.get('type')
-    year = request.args.get('year')
-    metric = request.args.get('metric')
+@app.route("/api/matchup")
+def matchup():
+    pitcher = request.args.get("pitcher")
+    batter = request.args.get("batter")
 
-    if type not in ['batter', 'pitcher'] or not year or not metric:
-        return jsonify({'error': 'Invalid query parameters'}), 400
-
-    allowed_metrics = {
-        'batter': ['H', 'HR', 'RBI', 'AVG', 'OBP', 'OPS', 'SB'],
-        'pitcher': ['ERA', 'WHIP', 'SO', 'BB', 'K9', 'BB9', 'W', 'L']
-    }
-
-    if metric not in allowed_metrics[type]:
-        return jsonify({'error': 'Invalid metric for selected type'}), 400
-
-    sort_order = 'ASC' if metric in ['ERA', 'WHIP', 'BB9'] else 'DESC'
+    if not pitcher or not batter:
+        return jsonify({"error": "Missing pitcher or batter ID"}), 400
 
     try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-        
-        if type == 'batter':
-            min_PA = 324
-            min_condition = f"PA >= {min_PA}"
-        else:
-            min_IP = 81
-            min_condition = f"IP >= {min_IP}"
-
-        query = f"""
-        WITH filtered AS (
-            SELECT Name, ID, Team, `{metric}`
-            FROM `{type}`
-            WHERE Year = %s
-              AND {min_condition}
-        ),
-        deduped AS (
-            SELECT
-              Name, ID, Team, `{metric}`,
-              ROW_NUMBER() OVER (
-                PARTITION BY Name
-                ORDER BY 
-                  CASE WHEN Team LIKE '%Teams%' THEN 1 ELSE 2 END
-              ) AS rn
-            FROM filtered
-        )
-        SELECT Name, ID, Team, `{metric}`
-        FROM deduped
-        WHERE rn = 1
-        ORDER BY `{metric}` {sort_order}
-        LIMIT 50
-        """
-        
-        cursor.execute(query, (year,))
-        results = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
-        return jsonify(results)
-
+        data = get_matchup(pitcher, batter)
+        return jsonify(data)
     except Exception as e:
-        print(e)
-        return jsonify({'error': 'Database query error'}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

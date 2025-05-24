@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route} from "react-router-dom";
 import Home from "./pages/Home";
-import PlayerSearch from "./pages/PlayerSearch"; // 搜尋球員頁面
-import PlayerDetail from "./pages/PlayerDetail"; // 球員詳情頁面
+import PlayerSearch from "./pages/PlayerSearch";
+import PlayerDetail from "./pages/PlayerDetail";
 import TeamDetail from "./pages/TeamDetail";
 import LeaderBoard from "./pages/LeaderBoard";
 import LeaderBoardDetail from "./pages/LeaderBoardDetail";
+import MatchUp from "./pages/MatchUp";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/team/:code" element={<TeamDetail />} />
         <Route path="/leaderboard" element={<LeaderBoard />} />
         <Route path="/LeaderBoardDetail" element={<LeaderBoardDetail />} />
+        <Route path="/MatchUp" element={<MatchUp />} />
       </Routes>
     </Router>
   );
