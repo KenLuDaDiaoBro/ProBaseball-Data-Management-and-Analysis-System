@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import mysql.connector
 from collections import OrderedDict
-from fetch_matchup import get_matchup
 
 app = Flask(__name__)
 CORS(app)  # 允許 React 前端請求 API
@@ -24,10 +23,10 @@ def get_players():
         cursor = conn.cursor(dictionary=True)  # 讓回傳資料變成 dict 格式
 
         # 查詢投手和打者的名稱
-        cursor.execute("SELECT ANY_VALUE(Name) AS Name , id FROM pitcher GROUP BY id;")  
+        cursor.execute("SELECT id, Name, 'Pitcher' AS Type FROM pitcher GROUP BY id, Name")
         pitchers = cursor.fetchall()
 
-        cursor.execute("SELECT ANY_VALUE(Name) AS Name , id FROM batter GROUP BY id;")  
+        cursor.execute("SELECT id, Name, 'Batter' AS Type FROM batter GROUP BY id, Name")
         batters = cursor.fetchall()
         
         # 合併結果
@@ -285,15 +284,28 @@ def player_lookup():
     
 @app.route("/api/matchup")
 def matchup():
-    pitcher = request.args.get("pitcher")
-    batter = request.args.get("batter")
+    pitcher_id = request.args.get("pitcher")
+    batter_id = request.args.get("batter")
 
-    if not pitcher or not batter:
+    if not pitcher_id or not batter_id:
         return jsonify({"error": "Missing pitcher or batter ID"}), 400
+    
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
 
     try:
-        data = get_matchup(pitcher, batter)
-        return jsonify(data)
+        query = """
+            SELECT game_date, pitch_type, description, release_speed, zone, events
+            FROM matchup
+            WHERE pitcher_id = %s AND batter_id = %s
+            ORDER BY game_date DESC
+        """
+        cursor.execute(query, (pitcher_id, batter_id))
+        result = cursor.fetchall()
+    
+        cursor.close()
+        conn.close()
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

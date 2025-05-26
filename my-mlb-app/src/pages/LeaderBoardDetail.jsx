@@ -118,6 +118,10 @@ function LeaderBoardDetail() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredOptions, setFilteredOptions] = useState([]);
 
+    const [visibleCols, setVisibleCols] = useState([]);
+    const [showColumnPicker, setShowColumnPicker] = useState(false);
+    const [rawData, setRawData] = useState([]);
+
     useEffect(() => {
         fetch("http://127.0.0.1:5000/api/players")
             .then(r => r.json())
@@ -217,14 +221,63 @@ function LeaderBoardDetail() {
             if (type === "batter" || type === "pitcher") {
                 arr = json.filter(item => String(item.Type).toLowerCase() === type);
             }
-            const defaultKey = type === 'pitcher' ? 'W' : 'PA';
-            setSortKey(defaultKey);
-            setSortOrder("desc");
-            setData(sortArray(arr, defaultKey, "desc"));
+            setRawData(arr);
         })
         .catch(console.error)
         .finally(() => setLoading(false));
     }, [type, year]);
+
+    useEffect(() => {
+        if (!rawData.length) return;
+        console.log("ca");
+
+        const columns = COLUMNS[type];
+        const keys = columns.map(c => c.key);
+
+        const priorityIgnore = new Set(['Name', 'Team', 'PA', 'W']);
+        const visibleDataCols = visibleCols.filter(key => !priorityIgnore.has(key));
+        const thirdColumnKey = visibleDataCols[0] || 'Name';    
+        const secondColumnKey = visibleDataCols[1] || 'Name';
+
+        const fallbackSortKeys = [];
+        if (type === 'batter') {
+            if (visibleCols.includes('PA')) fallbackSortKeys.push('PA');
+            if (visibleCols.length > 0 ) fallbackSortKeys.push(thirdColumnKey);
+            else fallbackSortKeys.push('Name');
+        } else if (type === 'pitcher') {
+            if (visibleCols.includes('W')) fallbackSortKeys.push('W');
+            if (visibleCols.length >= 0) fallbackSortKeys.push(thirdColumnKey);
+            else fallbackSortKeys.push('Name');
+        } else if (type === 'team') {
+            if (visibleCols.includes('PA')) fallbackSortKeys.push('PA');
+            if (visibleCols.length >= 0) fallbackSortKeys.push(secondColumnKey);
+            else fallbackSortKeys.push('Team');
+        }
+        
+        const multiSort = (arr, keys, order = "desc") => {
+            return [...arr].sort((a, b) => {
+                for (let key of keys) {
+                    const aVal = a[key];
+                    const bVal = b[key];
+                    let cmp = 0;
+                    if (typeof aVal === "number" && typeof bVal === "number") {
+                        cmp = aVal - bVal;
+                    } else {
+                        cmp = String(aVal).localeCompare(String(bVal));
+                    }
+                    if (cmp !== 0) {
+                        return order === "asc" ? cmp : -cmp;
+                    }
+                }
+                return 0;
+            });
+        };
+
+        setSortKey(fallbackSortKeys[0]);
+        setSortOrder("desc");
+        setData(multiSort(rawData, fallbackSortKeys, "desc"));
+    }, [visibleCols.join(','), rawData, type]);
+
 
     // 4. 點欄位時切換升／降、並重新排序
     const handleSort = (key) => {
@@ -258,7 +311,28 @@ function LeaderBoardDetail() {
         });
     };
 
-    const cols = COLUMNS[type];
+    useEffect(() => {
+        const saved = localStorage.getItem(`visibleCols_${type}`);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            const alwaysShown = ["Name", "Team"];
+            // 確保 Name/Team 永遠在欄位中
+            const merged = [...new Set([...alwaysShown, ...parsed])];
+            setVisibleCols(merged);
+        } else {
+            setVisibleCols(COLUMNS[type].map(c => c.key));
+        }
+    }, [type]);
+
+    const handleColumnToggle = (key) => {
+        const updated = visibleCols.includes(key)
+        ? visibleCols.filter(k => k !== key)
+        : [...visibleCols, key];
+        setVisibleCols(updated);
+        localStorage.setItem(`visibleCols_${type}`, JSON.stringify(updated));
+    };
+
+    const cols = COLUMNS[type].filter(c => visibleCols.includes(c.key));
 
     return (
         <div className="leaderboard-detail-container">
@@ -324,6 +398,29 @@ function LeaderBoardDetail() {
                 </label>
             </div>
 
+            {/* 自定義欄位按鈕 */}
+            <div className="leaderboard-detail-column-customization">
+                <button onClick={() => setShowColumnPicker(!showColumnPicker)}>
+                ⚙️ 顯示欄位
+                </button>
+                {showColumnPicker && (
+                <div className="leaderboard-detail-column-picker">
+                    {COLUMNS[type]
+                    .filter(col => col.key !== "Name" && col.key !== "Team")
+                    .map(col => (
+                    <label key={col.key} style={{ display: "block" }}>
+                        <input
+                        type="checkbox"
+                        checked={visibleCols.includes(col.key)}
+                        onChange={() => handleColumnToggle(col.key)}
+                        />
+                        {col.label}
+                    </label>
+                    ))}
+                </div>
+                )}
+            </div>
+
             {loading
                 ? <p>Loading…</p>
                 : <div className="leaderboard-detail-table-wrapper">
@@ -354,7 +451,7 @@ function LeaderBoardDetail() {
                                 v = v.toFixed(3);
                                 else if (['ERA','WHIP','K9','BB9'].includes(c.key))
                                 v = v.toFixed(2);
-                                else if (['IP','Chase','Whiff','GB','FB','GF'].includes(c.key))
+                                else if (['IP','Chase','Whiff','GB','FB','GF','Sprint'].includes(c.key))
                                 v = v.toFixed(1);
                             }
                             const isPlayerCol = c.key === 'Name';

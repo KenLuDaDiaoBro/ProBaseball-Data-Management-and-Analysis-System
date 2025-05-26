@@ -776,6 +776,42 @@ button:focus-visible {
   border-color: #646cff;
 }
 
+.column-selector-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.column-toggle-button {
+  padding: 4px 8px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background: white;
+}
+
+.column-checkbox-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 220px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 8px;
+  z-index: 1000;
+}
+
+.column-selector-dropdown:hover .column-checkbox-menu {
+  display: block;
+}
+
+.column-checkbox-item {
+  display: block;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
 .leaderboard-detail-table-wrapper {
   width: 100%;
   justify-content: center;

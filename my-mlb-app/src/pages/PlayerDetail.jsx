@@ -5,8 +5,8 @@ import {
   buildStyles
 } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import { BatterHeatMap } from './BatterHeatmap';
-import { PitcherHeatMap } from './PitcherHeatmap';
+import { BatterHeatMap } from '../components/BatterHeatmap';
+import { PitcherHeatMap } from '../components/PitcherHeatmap';
 
 function PlayerDetail() {
   const { id } = useParams(); // 取得 URL 中的球員 ID
@@ -64,7 +64,7 @@ function PlayerDetail() {
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/teams")
       .then((res) => res.json())
-      .then((data) => setTeams(data))   // data = [{ code: 'LAD', name: 'Los Angeles Dodgers' }, ...]
+      .then((data) => setTeams(data))
       .catch(console.error);
   }, []);
 
@@ -112,7 +112,7 @@ function PlayerDetail() {
   
     setFilteredOptions(combined);
   }, [searchTerm, players, teams]);
-
+ 
   // 選擇下拉選項 (player 或 team) 時跳轉
  const handleSelectOption = (opt) => {
    setSearchTerm("");
