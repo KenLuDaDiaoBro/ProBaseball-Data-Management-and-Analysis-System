@@ -229,29 +229,23 @@ function LeaderBoardDetail() {
 
     useEffect(() => {
         if (!rawData.length) return;
-        console.log("ca");
 
-        const columns = COLUMNS[type];
-        const keys = columns.map(c => c.key);
+        const allKeys = COLUMNS[type].map(c => c.key);
+        const visibleMainCols = allKeys.filter(key => visibleCols.includes(key));
+        let fallbackSortKeys = [];
 
-        const priorityIgnore = new Set(['Name', 'Team', 'PA', 'W']);
-        const visibleDataCols = visibleCols.filter(key => !priorityIgnore.has(key));
-        const thirdColumnKey = visibleDataCols[0] || 'Name';    
-        const secondColumnKey = visibleDataCols[1] || 'Name';
-
-        const fallbackSortKeys = [];
         if (type === 'batter') {
-            if (visibleCols.includes('PA')) fallbackSortKeys.push('PA');
-            if (visibleCols.length > 0 ) fallbackSortKeys.push(thirdColumnKey);
-            else fallbackSortKeys.push('Name');
+            if (visibleCols.includes('PA')) fallbackSortKeys = ['PA'];
+            else if (visibleCols.length >= 3) fallbackSortKeys = [visibleMainCols[2]];
+            else fallbackSortKeys = ['Name'];
         } else if (type === 'pitcher') {
-            if (visibleCols.includes('W')) fallbackSortKeys.push('W');
-            if (visibleCols.length >= 0) fallbackSortKeys.push(thirdColumnKey);
-            else fallbackSortKeys.push('Name');
+            if (visibleCols.includes('W')) fallbackSortKeys = ['W'];
+            else if (visibleCols.length >= 3) fallbackSortKeys = [visibleMainCols[2]];
+            else fallbackSortKeys = ['Name'];
         } else if (type === 'team') {
-            if (visibleCols.includes('PA')) fallbackSortKeys.push('PA');
-            if (visibleCols.length >= 0) fallbackSortKeys.push(secondColumnKey);
-            else fallbackSortKeys.push('Team');
+            if (visibleCols.includes('PA')) fallbackSortKeys = ['PA'];
+            else if (visibleCols.length >= 2) fallbackSortKeys = [visibleMainCols[1]];
+            else fallbackSortKeys = ['Name'];
         }
         
         const multiSort = (arr, keys, order = "desc") => {
@@ -273,7 +267,7 @@ function LeaderBoardDetail() {
             });
         };
 
-        setSortKey(fallbackSortKeys[0]);
+        setSortKey(fallbackSortKeys[0]); // 預設排序欄位
         setSortOrder("desc");
         setData(multiSort(rawData, fallbackSortKeys, "desc"));
     }, [visibleCols.join(','), rawData, type]);
@@ -287,6 +281,12 @@ function LeaderBoardDetail() {
         setSortOrder(newOrder);  // 記錄目前排序方向
         // 再把 data 依照新的 key & order 排一次
         setData(sortArray(data, key, newOrder));
+    };
+
+    const resetVisibleColumns = () => {
+        const allKeys = COLUMNS[type].map(c => c.key);
+        setVisibleCols(allKeys);
+        localStorage.setItem(`visibleCols_${type}`, JSON.stringify(allKeys));
     };
 
     const handlePlayerClick = (name, team, year) => {
@@ -387,7 +387,7 @@ function LeaderBoardDetail() {
                     </select>
                 </label>
 
-                <label style={{ marginLeft: 16 }}>
+                <label style={{ marginLeft: 12 }}>
                     Year:&nbsp;
                     <select value={year} onChange={e => setYear(+e.target.value)}>
                         {[...Array(4)].map((_, i) => {
@@ -396,19 +396,28 @@ function LeaderBoardDetail() {
                         })}
                     </select>
                 </label>
+                <button 
+                    className="leaderboard-detail-button" 
+                    onClick={() => setShowColumnPicker(!showColumnPicker)} 
+                    style={{ marginLeft: 24 }}>
+                    Setting
+                </button>
+                <button 
+                    className="leaderboard-detail-button"
+                    onClick={resetVisibleColumns} 
+                    style={{ marginLeft: 12 }}>
+                    Reset
+                </button>
             </div>
 
             {/* 自定義欄位按鈕 */}
             <div className="leaderboard-detail-column-customization">
-                <button onClick={() => setShowColumnPicker(!showColumnPicker)}>
-                ⚙️ 顯示欄位
-                </button>
                 {showColumnPicker && (
-                <div className="leaderboard-detail-column-picker">
+                <div className="leaderboard-detail-column-picker-panel">
                     {COLUMNS[type]
                     .filter(col => col.key !== "Name" && col.key !== "Team")
                     .map(col => (
-                    <label key={col.key} style={{ display: "block" }}>
+                    <label className="leaderboard-detail-column-picker-item" key={col.key} style={{ display: "block" }}>
                         <input
                         type="checkbox"
                         checked={visibleCols.includes(col.key)}

@@ -752,7 +752,7 @@ button:focus-visible {
   justify-content: center;
   align-items: center;
   gap: 24px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .leaderboard-detail-filters label {
@@ -776,40 +776,30 @@ button:focus-visible {
   border-color: #646cff;
 }
 
-.column-selector-dropdown {
-  position: relative;
-  display: inline-block;
+.leaderboard-detail-button {
+  padding: 0.4rem 1rem;
 }
 
-.column-toggle-button {
-  padding: 4px 8px;
-  cursor: pointer;
-  border: 1px solid #ccc;
-  background: white;
-}
-
-.column-checkbox-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 220px;
-  max-height: 300px;
+.leaderboard-detail-column-picker-panel {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
   overflow-y: auto;
-  background: white;
-  border: 1px solid #ccc;
-  padding: 8px;
-  z-index: 1000;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 1000px;
 }
 
-.column-selector-dropdown:hover .column-checkbox-menu {
-  display: block;
-}
-
-.column-checkbox-item {
-  display: block;
-  margin-bottom: 4px;
-  white-space: nowrap;
+.leaderboard-detail-column-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
 }
 
 .leaderboard-detail-table-wrapper {
