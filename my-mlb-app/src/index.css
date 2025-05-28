@@ -209,30 +209,27 @@ button:focus-visible {
 /* ===== PlayerDetail 頁面 ===== */
 /* ============================= */
 .player-detail-container {
-  height: 100vh;
-  weight: 100vw;
-  background: none;
-  box-shadow: none;
-  border: none;
+  position: relative;
+  min-height: 100vh;
+  width: 99vw;
   background: #f0f2f5;
-  padding-bottom: 30px;
+  padding-top: 40px;
 }
 
 /* ========== 標題 ========== */
 .player-detail-player-name {
-  position: absolute;
-  top: 100px;
-  left: 50px;
+  width: 300px;
+  margin-top: 120px;
+  margin-left: 50px;
   font-size: 36px;
   font-weight: bold;
   color: black;
-  margin: 0;
 }
 
 .player-detail-year-select-wrapper {
-  position: absolute;
-  top: 200px;
-  left: 50px;
+  width: 300px;
+  margin-top: 50px;
+  margin-left: 50px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -260,7 +257,7 @@ button:focus-visible {
 .player-detail-heatmap {
   position: absolute;
   display: flex;
-  top: 12%;
+  top: 120px;
   left: 27%;
   flex-direction: column;
   align-items: center;
@@ -275,7 +272,7 @@ button:focus-visible {
 /* ========== 量表圖表 ========== */
 .player-detail-gauge-wrapper {
   position: absolute;
-  top: 130px;
+  top: 170px;
   right: 150px;
   display: grid;
   grid-template-columns: repeat(2, auto);
@@ -304,22 +301,21 @@ button:focus-visible {
 
 /* ========== 表格 ========== */
 .player-detail-stats-wrapper {
-  max-height: 400px;
-  overflow-y: auto;
-  margin-top: 20px;
-  margin-bottom: 60px;
+  width: 100%;
+  margin-top: 260px;
+  display: flex;
+  justify-content: center; /* 水平置中 */
+  overflow-x: hidden; /* 防止水平滾動 */
+  box-sizing: border-box;
 }
 
 .player-detail-stats-table {
-  position: absolute;
-  top: 550px;
-  left: 50%;
-  transform: translateX(-50%);
+  width: 900px;
   border-collapse: collapse;
   font-size: 16px;
   color: #333;
-  background-color: white;
   z-index: 1;
+  margin-bottom: 20px;
 }
 
 .player-detail-stats-table th,
@@ -599,6 +595,10 @@ button:focus-visible {
   font-size: 18px;
 }
 
+.leader-board-more:hover {
+  color: #66b2ff;
+}
+
 .leader-board-flex {
   display: flex;
   justify-content: space-between;
@@ -624,6 +624,7 @@ button:focus-visible {
   margin-bottom: 12px;
   justify-content: center;
 }
+
 .leader-board-tab {
   flex: 1;
   padding: 6px 0;
@@ -634,6 +635,10 @@ button:focus-visible {
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
+}
+.leader-board-tab:hover {
+  background: #d6dfe6;
+  color: #333;
 }
 .leader-board-tab.active {
   background: #007bff;
@@ -778,6 +783,7 @@ button:focus-visible {
 
 .leaderboard-detail-button {
   padding: 0.4rem 1rem;
+  font-size: 15px;
 }
 
 .leaderboard-detail-column-picker-panel {
@@ -803,17 +809,18 @@ button:focus-visible {
 }
 
 .leaderboard-detail-table-wrapper {
-  width: 100%;
-  justify-content: center;
+  max-width: 90%;
+  display: flex;
   overflow-x: auto;
 }
 
 .leaderboard-detail-table {
-  width: 100%;
   border-collapse: collapse;
   font-size: 14px;
   color: #333;
   background: #fff;
+  table-layout: fixed;
+  min-width: 900px; 
 }
 
 .leaderboard-detail-table th,
@@ -825,7 +832,7 @@ button:focus-visible {
 }
 
 .leaderboard-detail-table th {
-  background-color: #f2f2f2;
+  background-color: #f0fdf4;
   font-weight: 600;
   cursor: pointer;
   user-select: none;
@@ -953,7 +960,7 @@ button:focus-visible {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;         /* 撑满视窗宽度 */
+  width: 99vw;         /* 撑满视窗宽度 */
   height: 80px;         /* 根据固定元素的高度调整 */
   background-color: #fff;
   z-index: 2;

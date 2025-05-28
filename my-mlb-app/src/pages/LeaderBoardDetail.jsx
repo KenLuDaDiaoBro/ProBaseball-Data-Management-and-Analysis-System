@@ -206,51 +206,31 @@ function LeaderBoardDetail() {
         });
     };
 
-    // when year changes, fetch league stats
-    useEffect(() => {
-        setLoading(true);
-        const endpoint =
-        type === 'team'
-            ? `http://127.0.0.1:5000/api/league_team_stats?year=${year}`
-            : `http://127.0.0.1:5000/api/players_stats?year=${year}`;
-        fetch(endpoint)
-        .then(r => r.json())
-        .then(json => {
-            // 先做 type 篩選
-            let arr = json
-            if (type === "batter" || type === "pitcher") {
-                arr = json.filter(item => String(item.Type).toLowerCase() === type);
-            }
-            setRawData(arr);
-        })
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    }, [type, year]);
-
-    useEffect(() => {
-        if (!rawData.length) return;
-
+    const applyDefaultSort = (raw, type, visibleCols, currentSortKey) => {
         const allKeys = COLUMNS[type].map(c => c.key);
         const visibleMainCols = allKeys.filter(key => visibleCols.includes(key));
-        let fallbackSortKeys = [];
 
-        if (type === 'batter') {
-            if (visibleCols.includes('PA')) fallbackSortKeys = ['PA'];
-            else if (visibleCols.length >= 3) fallbackSortKeys = [visibleMainCols[2]];
-            else fallbackSortKeys = ['Name'];
-        } else if (type === 'pitcher') {
-            if (visibleCols.includes('W')) fallbackSortKeys = ['W'];
-            else if (visibleCols.length >= 3) fallbackSortKeys = [visibleMainCols[2]];
-            else fallbackSortKeys = ['Name'];
-        } else if (type === 'team') {
-            if (visibleCols.includes('PA')) fallbackSortKeys = ['PA'];
-            else if (visibleCols.length >= 2) fallbackSortKeys = [visibleMainCols[1]];
-            else fallbackSortKeys = ['Name'];
+        let newSortKey = currentSortKey;
+
+        if (!visibleCols.includes(currentSortKey)) {
+            if (type === 'batter') {
+                if (visibleCols.includes('PA')) newSortKey = 'PA';
+                else if (visibleCols.length >= 3) newSortKey = visibleMainCols[2];
+                else newSortKey = 'Name';
+            } else if (type === 'pitcher') {
+                if (visibleCols.includes('W')) newSortKey = 'W';
+                else if (visibleCols.length >= 3) newSortKey = visibleMainCols[2];
+                else newSortKey = 'Name';
+            } else if (type === 'team') {
+                if (visibleCols.includes('PA')) newSortKey = 'PA';
+                else if (visibleCols.length >= 2) newSortKey = visibleMainCols[1];
+                else newSortKey = 'Name';
+            }
         }
-        
+
         const multiSort = (arr, keys, order = "desc") => {
             return [...arr].sort((a, b) => {
-                for (let key of keys) {
+                for (let key of Array.isArray(keys) ? keys : [keys]) {
                     const aVal = a[key];
                     const bVal = b[key];
                     let cmp = 0;
@@ -267,9 +247,44 @@ function LeaderBoardDetail() {
             });
         };
 
-        setSortKey(fallbackSortKeys[0]); // 預設排序欄位
+        const sortedData = multiSort(raw, newSortKey, "desc");
+        return { sortedData, newSortKey };
+    };
+
+    // when year changes, fetch league stats
+    useEffect(() => {
+        setLoading(true);
+        const endpoint =
+        type === 'team'
+            ? `http://127.0.0.1:5000/api/league_team_stats?year=${year}`
+            : `http://127.0.0.1:5000/api/players_stats?year=${year}`;
+        fetch(endpoint)
+        .then(r => r.json())
+        .then(json => {
+            // 先做 type 篩選
+            let arr = json
+            if (type === "batter" || type === "pitcher") {
+                arr = json.filter(item => String(item.Type).toLowerCase() === type);
+            }
+
+            const allKeys = COLUMNS[type].map(c => c.key);
+            const { sortedData, newSortKey } = applyDefaultSort(arr, type, allKeys, sortKey);
+            setRawData(sortedData);  // 傳回排序過的 rawData
+            setData(sortedData);     // 顯示用資料也更新
+            setSortKey(newSortKey);
+            setSortOrder("desc");
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }, [type, year]);
+
+    useEffect(() => {
+        if (!rawData.length) return;
+
+        const { sortedData, newSortKey } = applyDefaultSort(rawData, type, visibleCols, sortKey);
+        setSortKey(newSortKey);
         setSortOrder("desc");
-        setData(multiSort(rawData, fallbackSortKeys, "desc"));
+        setData(sortedData);
     }, [visibleCols.join(','), rawData, type]);
 
 
@@ -434,63 +449,63 @@ function LeaderBoardDetail() {
                 ? <p>Loading…</p>
                 : <div className="leaderboard-detail-table-wrapper">
                     <table className="leaderboard-detail-table">
-                    <thead>
-                        <tr>
-                            {cols.map(c => (
-                            <th
-                                key={c.key}
-                                onClick={() => handleSort(c.key)}
-                                style={{ cursor: "pointer", userSelect: "none" }}
-                            >
-                                {c.label}
-                                {sortKey === c.key
-                                ? (sortOrder === "desc" ? " 🔽" : " 🔼")
-                                : ""}
-                            </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((row,idx)=>(
-                        <tr key={idx}>
-                            {cols.map(c=>{
-                            let v = row[c.key];
-                            if (typeof v==='number') {
-                                if (['AVG','OPS','OBP','SLG'].includes(c.key))
-                                v = v.toFixed(3);
-                                else if (['ERA','WHIP','K9','BB9'].includes(c.key))
-                                v = v.toFixed(2);
-                                else if (['IP','Chase','Whiff','GB','FB','GF','Sprint'].includes(c.key))
-                                v = v.toFixed(1);
-                            }
-                            const isPlayerCol = c.key === 'Name';
-                            const isTeamCol = c.key === 'Team' && !String(row.Team).includes('Teams');
-                            const onClick = isPlayerCol
-                                ? () => handlePlayerClick(row.Name, row.Team, year)
-                                : isTeamCol
-                                    ? () => navigate(`/team/${row.Team}`)
-                                    : undefined;
-                            const cursor = isPlayerCol || isTeamCol
-                                ? 'pointer'
-                                : 'default';
-                            const isClickable = isPlayerCol || isTeamCol;
-                            return (
-                                <td
+                        <thead>
+                            <tr>
+                                {cols.map(c => (
+                                <th
                                     key={c.key}
-                                    onClick={onClick}
-                                    className={isClickable ? 'leaderboard-detail-clickable-cell' : ''}
-                                    style={{
-                                        whiteSpace: 'nowrap',
-                                        cursor
-                                    }}
+                                    onClick={() => handleSort(c.key)}
+                                    style={{ cursor: "pointer", userSelect: "none" }}
                                 >
-                                    {v != null ? v : '—'}
-                                </td>
-                                );
-                            })}
-                        </tr>
-                        ))}
-                    </tbody>
+                                    {c.label}
+                                    {sortKey === c.key
+                                    ? (sortOrder === "desc" ? " 🔽" : " 🔼")
+                                    : ""}
+                                </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map((row,idx)=>(
+                            <tr key={idx}>
+                                {cols.map(c=>{
+                                let v = row[c.key];
+                                if (typeof v==='number') {
+                                    if (['AVG','OPS','OBP','SLG'].includes(c.key))
+                                    v = v.toFixed(3);
+                                    else if (['ERA','WHIP','K9','BB9'].includes(c.key))
+                                    v = v.toFixed(2);
+                                    else if (['IP','Chase','Whiff','GB','FB','GF','Sprint'].includes(c.key))
+                                    v = v.toFixed(1);
+                                }
+                                const isPlayerCol = c.key === 'Name';
+                                const isTeamCol = c.key === 'Team' && !String(row.Team).includes('Teams');
+                                const onClick = isPlayerCol
+                                    ? () => handlePlayerClick(row.Name, row.Team, year)
+                                    : isTeamCol
+                                        ? () => navigate(`/team/${row.Team}`)
+                                        : undefined;
+                                const cursor = isPlayerCol || isTeamCol
+                                    ? 'pointer'
+                                    : 'default';
+                                const isClickable = isPlayerCol || isTeamCol;
+                                return (
+                                    <td
+                                        key={c.key}
+                                        onClick={onClick}
+                                        className={isClickable ? 'leaderboard-detail-clickable-cell' : ''}
+                                        style={{
+                                            whiteSpace: 'nowrap',
+                                            cursor
+                                        }}
+                                    >
+                                        {v != null ? v : '—'}
+                                    </td>
+                                    );
+                                })}
+                            </tr>
+                            ))}
+                        </tbody>
                     </table>
                 </div>
             }
