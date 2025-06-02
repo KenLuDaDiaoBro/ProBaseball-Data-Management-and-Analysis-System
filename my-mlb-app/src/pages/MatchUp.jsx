@@ -1,161 +1,270 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function MatchUp() {
   const [players, setPlayers] = useState([]);
-  const [pitchers, setPitchers] = useState([]);
-  const [batters, setBatters] = useState([]);
-
+  const [teams, setTeams] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [pitcherInput, setPitcherInput] = useState("");
   const [batterInput, setBatterInput] = useState("");
+  const [selectedPitcher, setSelectedPitcher] = useState(null);
+  const [selectedBatter, setSelectedBatter] = useState(null);
+  const [isPitcherFocused, setIsPitcherFocused] = useState(false);
+  const [isBatterFocused, setIsBatterFocused] = useState(false);
+  const [filteredOptions, setFilteredOptions] = useState([]);
   const [filteredPitchers, setFilteredPitchers] = useState([]);
   const [filteredBatters, setFilteredBatters] = useState([]);
-  const [selectedPitcherId, setSelectedPitcherId] = useState(null);
-  const [selectedBatterId, setSelectedBatterId] = useState(null);
+  const navigate = useNavigate();
 
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const [matchupData, setMatchupData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [yearStats, setYearStats] = useState({});
 
-  // 載入球員資料
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/players")
-      .then(res => res.json())
-      .then(data => {
-        setPlayers(data);
-        setPitchers(data.filter(p => p.Type === "Pitcher"));
-        setBatters(data.filter(p => p.Type !== "Pitcher"));
-      })
-      .catch(err => console.error("Error fetching players:", err));
+      .then(r => r.json())
+      .then(setPlayers)
+      .catch(console.error);
+
+    fetch("http://127.0.0.1:5000/api/teams")
+      .then(r => r.json())
+      .then(setTeams)
+      .catch(console.error);
   }, []);
-
-  // 推薦名單 - 投手
+      
   useEffect(() => {
-    const term = pitcherInput.trim().toLowerCase();
-    if (!term) return setFilteredPitchers([]);
-    const matches = pitchers
-      .map(p => {
-        const name = p.Name.toLowerCase();
-        let score = name.startsWith(term) ? 2 : name.includes(term) ? 1 : 0;
-        return { ...p, score };
-      })
-      .filter(p => p.score > 0)
-      .sort((a, b) => b.score - a.score || a.Name.localeCompare(b.Name))
-      .slice(0, 5);
-    setFilteredPitchers(matches);
-  }, [pitcherInput, pitchers]);
-
-  // 推薦名單 - 打者
-  useEffect(() => {
-    const term = batterInput.trim().toLowerCase();
-    if (!term) return setFilteredBatters([]);
-    const matches = batters
-      .map(b => {
-        const name = b.Name.toLowerCase();
-        let score = name.startsWith(term) ? 2 : name.includes(term) ? 1 : 0;
-        return { ...b, score };
-      })
-      .filter(b => b.score > 0)
-      .sort((a, b) => b.score - a.score || a.Name.localeCompare(b.Name))
-      .slice(0, 5);
-    setFilteredBatters(matches);
-  }, [batterInput, batters]);
-
-  // 送出查詢
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedPitcherId || !selectedBatterId) {
-      setError("Please select both a pitcher and a batter.");
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) {
+      setFilteredOptions([]);
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setData([]);
-    setSubmitted(true);
+    // 1. 球員打分
+    const scoredPlayers = players
+    .map((p) => {
+      const name = p.Name.toLowerCase();
+      let score = 0;
+      if (name.startsWith(term)) score += 2;
+      else if (name.includes(term)) score += 1;
+      return { ...p, score, type: 'player' };
+    })
+    .filter((p) => p.score > 0);
 
-    try {
-      const res = await fetch(
-        `http://127.0.0.1:5000/api/matchup?pitcher=${selectedPitcherId}&batter=${selectedBatterId}`
-      );
-      const text = await res.text();
-      const result = JSON.parse(text);
-      if (res.ok) setData(result);
-      else setError(result.error || "Unknown error");
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setError("Failed to fetch matchup data.");
-    } finally {
-      setLoading(false);
+    // 2. 球隊打分
+    const scoredTeams = teams
+    .map((t) => {
+      const code = t.code.toLowerCase();
+      let score = 0;
+      if (code.startsWith(term)) score += 2;
+      else if (code.includes(term)) score += 1;
+      return { ...t, score, type: 'team' };
+    })
+    .filter((t) => t.score > 0);
+
+    // 3. 合併、排序、取前 5
+    const combined = [...scoredPlayers, ...scoredTeams]
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      // 同分就按名字/代號
+      const aKey = a.type === 'player' ? a.Name : a.code;
+      const bKey = b.type === 'player' ? b.Name : b.code;
+      return aKey.localeCompare(bKey);
+    })
+    .slice(0, 5)
+    .map(({ score, ...rest }) => rest);
+
+    setFilteredOptions(combined);
+  }, [searchTerm, players, teams]);
+
+  // Pitcher search
+  useEffect(() => {
+    const term = pitcherInput.trim().toLowerCase();
+    if (!term) return setFilteredPitchers([]);
+
+    const matches = players
+      .filter((p) => p.Type === "Pitcher")
+      .map((p) => {
+        const name = p.Name.toLowerCase();
+        let score = 0;
+        if (name.startsWith(term)) score += 2;
+        else if (name.includes(term)) score += 1;
+        return { ...p, score };
+      })
+      .filter((p) => p.score > 0)
+      .sort((a, b) => b.score - a.score || a.Name.localeCompare(b.Name))
+      .slice(0, 5);
+
+    setFilteredPitchers(matches);
+  }, [pitcherInput, players]);
+
+  // Batter search
+  useEffect(() => {
+    const term = batterInput.trim().toLowerCase();
+    if (!term) return setFilteredBatters([]);
+
+    const matches = players
+      .filter((p) => p.Type !== "Pitcher")
+      .map((p) => {
+        const name = p.Name.toLowerCase();
+        let score = 0;
+        if (name.startsWith(term)) score += 2;
+        else if (name.includes(term)) score += 1;
+        return { ...p, score };
+      })
+      .filter((p) => p.score > 0)
+      .sort((a, b) => b.score - a.score || a.Name.localeCompare(b.Name))
+      .slice(0, 5);
+
+    setFilteredBatters(matches);
+  }, [batterInput, players]);
+      
+  const handleSelectOption = (opt) => {
+    setSearchTerm("");
+    setFilteredOptions([]);      // ← 這裡清空 filteredOptions
+    if (opt.type === "player") {
+    navigate(`/playerDetail/${opt.id}`);
+    } else {
+    navigate(`/team/${opt.code}`);
     }
   };
 
-  // 計算統計
-  const calculateStats = (data) => {
-    const stats = {
-      PA: data.length,
-      AB: 0,
-      H: 0,
-      '2B': 0,
-      '3B': 0,
-      HR: 0,
-      BB: 0,
-      HBP: 0,
-      SO: 0,
-      AVG: 0.0,
-      OBP: 0.0,
-      SLG: 0.0,
-      OPS: 0.0,
-    };
-    data.forEach((item) => {
-      const event = item.events;
-      if (event === 'walk' || event === 'intent_walk') stats.BB++;
-      else if (event === 'hit_by_pitch') stats.HBP++;
-      else if (event === 'sac_fly' || event === 'sac_bunt') return;
-      else {
-        stats.AB++;
-        if (event === 'single') stats.H++;
-        else if (event === 'double') { stats.H++; stats['2B']++; }
-        else if (event === 'triple') { stats.H++; stats['3B']++; }
-        else if (event === 'home_run') { stats.H++; stats.HR++; }
-        else if (event === 'strikeout') stats.SO++;
-      }
-    });
-    stats.AVG = stats.AB > 0 ? (stats.H / stats.AB).toFixed(3) : 0.0;
-    stats.OBP = stats.PA > 0 ? ((stats.H + stats.BB + stats.HBP) / stats.PA).toFixed(3) : 0.0;
-    stats.SLG = stats.AB > 0 ? ((stats.H + stats['2B'] * 2 + stats['3B'] * 3 + stats.HR * 4) / stats.AB).toFixed(3) : 0.0;
-    stats.OPS = (parseFloat(stats.OBP) + parseFloat(stats.SLG)).toFixed(3);
-    return stats;
+  const handleSelectPitcher = (p) => {
+    setPitcherInput(p.Name);       // 顯示選擇的名字
+    setSelectedPitcher(p);         // 記住選擇的物件
+    setFilteredPitchers([]);
+    setIsPitcherFocused(false);
   };
 
-  return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Pitcher vs Batter Matchup</h1>
+  const handleSelectBatter = (b) => {
+    setBatterInput(b.Name);
+    setSelectedBatter(b);
+    setFilteredBatters([]);
+    setIsBatterFocused(false);
+  };
 
-      <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-        {/* 投手欄位 */}
-        <div>
+  const handleSubmit = async () => {
+    if (selectedPitcher && selectedBatter) {
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:5000/api/matchup?pitcher=${selectedPitcher.id}&batter=${selectedBatter.id}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch matchup data");
+        }
+        const data = await response.json();
+        console.log("Matchup data:", data);
+        setMatchupData(data);
+        // TODO: 將 data 顯示在畫面上（例如 setMatchupData(data)）
+      } catch (error) {
+        console.error("Error fetching matchup:", error);
+        alert("取得對戰資料時發生錯誤");
+      }
+    } else {
+      alert("請選擇一位投手與一位打者");
+    }
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+    if (!matchupData || matchupData.length === 0) return;
+
+    const statsByYear = {};
+
+    matchupData.forEach(row => {
+      const year = new Date(row.game_date).getFullYear();
+      if (year < 2021 || year > 2024) return; // Skip other years
+
+      if (!statsByYear[year]) {
+        statsByYear[year] = {
+          PA: 0, AB: 0, H: 0, '2B': 0, '3B': 0, HR: 0,
+          SO: 0, BB: 0, HBP: 0, TB: 0
+        };
+      }
+
+      const s = statsByYear[year];
+      const event = row.events?.toLowerCase() || '';
+
+      if (event !== '') s.PA++;
+      if (!['walk', 'hit_by_pitch', 'sac_fly', 'sac_bunt', 'intent_walk'].includes(event) && event !== '') s.AB++;
+      if (['single', 'double', 'triple', 'home_run'].includes(event)) {
+        s.H++;
+        if (event === 'double') { s['2B']++; s.TB += 2; }
+        else if (event === 'triple') { s['3B']++; s.TB += 3; }
+        else if (event === 'home_run') { s.HR++; s.TB += 4; }
+        else { s.TB += 1; }
+      }
+      if (event === 'strikeout') s.SO++;
+      if (event === 'walk') s.BB++;
+      if (event === 'hit_by_pitch') s.HBP++;
+    });
+
+    const total = Object.values(statsByYear).reduce((sum, year) => {
+      for (let key in year) {
+        sum[key] = (sum[key] || 0) + year[key];
+      }
+      return sum;
+    }, {});
+
+    statsByYear['Total'] = total;
+    setYearStats(statsByYear);
+    setIsLoading(false);
+  }, [matchupData]);
+
+  return (
+    <div className="matchup-container">
+      <div className="fixed-header-bg" />
+      <button className="back-button" onClick={()=>navigate(-1)}>←</button>
+      <div className="home-image">
+        <img
+        className="home-icon"
+        src="/home-icon.svg"
+        alt="Home"
+        onClick={() => navigate("/")}
+        />
+      </div>
+
+      <div className="search-box">
+        <input
+        type="text"
+        placeholder="Search for a player or a team..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="search-input"
+        />
+        {filteredOptions.length > 0 && (
+        <ul className="search-suggestions">
+          {filteredOptions.map((opt, i) => (
+          <li
+            key={i}
+            className="search-suggestion-item"
+            onClick={() => handleSelectOption(opt)}
+          >
+            {opt.type === "player" ? opt.Name : opt.code}
+          </li>
+          ))}
+        </ul>
+      )}
+      </div>
+      <div className="matchup-search-section">
+        {/* Pitcher search */}
+        <label className="matchup-search-label">Pitcher:</label>
+        <div className="matchup-search-box">
           <input
             type="text"
-            placeholder="Pitcher Name"
+            placeholder="Search for a pitcher..."
             value={pitcherInput}
-            onChange={(e) => {
-              setPitcherInput(e.target.value);
-              setSelectedPitcherId(null);
-            }}
-            className="border px-2 py-1 w-full"
+            onChange={(e) => setPitcherInput(e.target.value)}
+            onFocus={() => setIsPitcherFocused(true)}
+            onBlur={() => setTimeout(() => setIsPitcherFocused(false), 150)}
+            className="search-input"
           />
-          {filteredPitchers.length > 0 && (
-            <ul className="border border-gray-300 rounded bg-white mt-1">
-              {filteredPitchers.map(p => (
+          {filteredPitchers.length > 0 && isPitcherFocused && (
+            <ul className="matchup-search-suggestions">
+              {filteredPitchers.map((p, i) => (
                 <li
-                  key={p.id}
-                  className="px-2 py-1 hover:bg-blue-100 cursor-pointer"
-                  onClick={() => {
-                    setPitcherInput(p.Name);
-                    setSelectedPitcherId(p.id);
-                    setFilteredPitchers([]);
-                  }}
+                  key={i}
+                  className="matchup-search-suggestion-item"
+                  onMouseDown={() => handleSelectPitcher(p)}
                 >
                   {p.Name}
                 </li>
@@ -164,29 +273,25 @@ function MatchUp() {
           )}
         </div>
 
-        {/* 打者欄位 */}
-        <div>
+        {/* Batter search */}
+        <label className="matchup-search-label">Batter:</label>
+        <div className="matchup-search-box">
           <input
             type="text"
-            placeholder="Batter Name"
+            placeholder="Search for a batter..."
             value={batterInput}
-            onChange={(e) => {
-              setBatterInput(e.target.value);
-              setSelectedBatterId(null);
-            }}
-            className="border px-2 py-1 w-full"
+            onChange={(e) => setBatterInput(e.target.value)}
+            onFocus={() => setIsBatterFocused(true)}
+            onBlur={() => setTimeout(() => setIsBatterFocused(false), 150)}
+            className="search-input"
           />
-          {filteredBatters.length > 0 && (
-            <ul className="border border-gray-300 rounded bg-white mt-1">
-              {filteredBatters.map(b => (
+          {filteredBatters.length > 0 && isBatterFocused && (
+            <ul className="matchup-search-suggestions">
+              {filteredBatters.map((b, i) => (
                 <li
-                  key={b.id}
-                  className="px-2 py-1 hover:bg-blue-100 cursor-pointer"
-                  onClick={() => {
-                    setBatterInput(b.Name);
-                    setSelectedBatterId(b.id);
-                    setFilteredBatters([]);
-                  }}
+                  key={i}
+                  className="matchup-search-suggestion-item"
+                  onMouseDown={() => handleSelectBatter(b)}
                 >
                   {b.Name}
                 </li>
@@ -194,71 +299,51 @@ function MatchUp() {
             </ul>
           )}
         </div>
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Submit
-        </button>
-      </form>
-
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-      {submitted && !loading && data.length === 0 && !error && <p>No matchup data found.</p>}
-
-      {/* 對戰明細 */}
-      {data.length > 0 && (
-        <>
-          <table className="table-auto border border-collapse border-gray-400 w-full text-sm">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border px-2 py-1">Game Date</th>
-                <th className="border px-2 py-1">Pitch Type</th>
-                <th className="border px-2 py-1">Description</th>
-                <th className="border px-2 py-1">Release Speed</th>
-                <th className="border px-2 py-1">Zone</th>
-                <th className="border px-2 py-1">Events</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row, idx) => (
-                <tr key={idx}>
-                  <td className="border px-2 py-1">{row.game_date}</td>
-                  <td className="border px-2 py-1">{row.pitch_type}</td>
-                  <td className="border px-2 py-1">{row.description}</td>
-                  <td className="border px-2 py-1">{row.release_speed}</td>
-                  <td className="border px-2 py-1">{row.zone}</td>
-                  <td className="border px-2 py-1">{row.events}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* 統計表 */}
-          <div className="mt-6">
-            <h2 className="text-xl font-bold mb-2">Matchup Statistics</h2>
-            <table className="table-auto border border-collapse border-gray-400 w-full text-sm">
+        <button className="matchup-submit-button" onClick={handleSubmit}>Submit</button>
+      </div>
+      <div className="matchup-table-wrapper">
+        {isLoading ? (
+          <div className="loading">Loading...</div>
+        ) : (
+        matchupData.length > 0 && (
+          <div className="matchup-result">
+            <h3>Matchup Results</h3>
+            <table className="matchup-table">
               <thead>
-                <tr className="bg-gray-200">
-                  {["PA", "AB", "H", "2B", "3B", "HR", "BB", "HBP", "SO", "AVG", "OBP", "SLG", "OPS"].map(col => (
-                    <th key={col} className="border px-2 py-1">{col}</th>
-                  ))}
+                <tr>
+                  <th>Year</th>
+                  <th>PA</th><th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th>
+                  <th>SO</th><th>BB</th><th>HBP</th>
+                  <th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  {Object.values(calculateStats(data)).map((val, idx) => (
-                    <td key={idx} className="border px-2 py-1">{val}</td>
-                  ))}
-                </tr>
+                {['2021', '2022', '2023', '2024', 'Total'].map(year => {
+                  const s = yearStats[year];
+                  if (!s) return null;
+
+                  const AVG = s.AB ? (s.H / s.AB).toFixed(3) : '-';
+                  const OBP = (s.AB + s.BB + s.HBP) ? ((s.H + s.BB + s.HBP) / (s.AB + s.BB + s.HBP)).toFixed(3) : '-';
+                  const SLG = s.AB ? (s.TB / s.AB).toFixed(3) : '-';
+                  const OPS = (OBP !== '-' && SLG !== '-') ? (parseFloat(OBP) + parseFloat(SLG)).toFixed(3) : '-';
+
+                  return (
+                    <tr key={year}>
+                      <td>{year}</td>
+                      <td>{s.PA}</td><td>{s.AB}</td><td>{s.H}</td><td>{s['2B']}</td><td>{s['3B']}</td><td>{s.HR}</td>
+                      <td>{s.SO}</td><td>{s.BB}</td><td>{s.HBP}</td>
+                      <td>{AVG}</td><td>{OBP}</td><td>{SLG}</td><td>{OPS}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        </>
-      )}
+        ))}
+      </div>
+      
     </div>
-  );
+  )
 }
 
 export default MatchUp;

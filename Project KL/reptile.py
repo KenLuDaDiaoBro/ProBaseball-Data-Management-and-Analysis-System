@@ -13,9 +13,9 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
 # 設定目標球隊
-Teams = ["Royals"]
+Teams = ["Mets"]
 players_data = []
-Yr = [2022]
+Yr = [2023, 2024]
 
 # 設定瀏覽器
 s = Service("C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/chromedriver-win64/chromedriver.exe")

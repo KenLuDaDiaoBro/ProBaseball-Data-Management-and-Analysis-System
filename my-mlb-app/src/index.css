@@ -712,7 +712,7 @@ button:focus-visible {
 }
 
 .leader-board-team-clickable-team:hover {
-    color: #0080FF;
+  color: #0080FF;
   text-decoration: none;
   cursor: pointer;
 }
@@ -850,6 +850,127 @@ button:focus-visible {
   color: #0080ff;
   cursor: pointer;
   text-decoration: none;
+}
+
+/* ============================= */
+/* ===== Matchup 頁面 ===== */
+/* ============================= */
+.matchup-container {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  padding: 20px;
+  background: #f0f2f5;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.matchup-search-section {
+  height: 100px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 80px;
+  flex-wrap: wrap;
+}
+
+.matchup-search-label {
+  display: block;
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+  margin-left: 50px;
+  margin-right: 10px;
+}
+
+.matchup-search-box {
+  position: relative;
+  width: 250px;
+}
+
+.matchup-search-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);     /* 緊貼 <input> 下面 */
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  margin-top: 10px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 10;
+  overflow: hidden;
+  max-height: calc(5 * 45px);
+  text-align: center;
+}
+
+.matchup-search-suggestions li {
+  height: 45px;
+  line-height: 45px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.matchup-search-suggestions li:nth-child(odd) {
+  background: #f9f9f9;
+}
+
+.matchup-search-suggestions li:hover {
+  background: #007bff;
+  color: #fff;
+  font-weight: 700;
+  transform: scale(1.05);
+}
+
+.matchup-table-wrapper {
+  max-width: 90%;
+  display: flex;
+  overflow-x: auto;
+}
+
+.matchup-table {
+  border-collapse: collapse;
+  font-size: 14px;
+  color: #333;
+  background: #fff;
+  table-layout: fixed;
+  min-width: 900px; 
+}
+
+.matchup-table th,
+.matchup-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.matchup-table th {
+  background-color: #f0fdf4;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.matchup-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.matchup-table tr:hover {
+  background-color: #e6f7ff;
 }
 
 /* ========== 搜尋列 ========== */
