@@ -935,9 +935,35 @@ button:focus-visible {
   transform: scale(1.05);
 }
 
+.matchup-submit-button {
+  font-size: 15px;
+  margin-left: 50px;
+  padding: 10px 20px;
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.matchup-submit-button:hover {
+  background-color: #000000;
+  color: #ffffff; 
+  transform: scale(1.05);
+}
+
+.matchup-submit-button:active {
+  background-color: #222222;
+  color: #ffffff;
+  transform: scale(0.97);
+}
+
 .matchup-table-wrapper {
   max-width: 90%;
+  margin: 30px auto 0;
   display: flex;
+  justify-content: center;
   overflow-x: auto;
 }
 
@@ -973,6 +999,10 @@ button:focus-visible {
   background-color: #e6f7ff;
 }
 
+.matchup-pie-label{
+  textAlign: center;
+  margin-top: 20px;
+}
 /* ========== 搜尋列 ========== */
 .search-box {
   position: fixed;

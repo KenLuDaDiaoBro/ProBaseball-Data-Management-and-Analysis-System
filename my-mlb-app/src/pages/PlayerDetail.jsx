@@ -5,8 +5,8 @@ import {
   buildStyles
 } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import { BatterHeatMap } from '../components/BatterHeatmap';
-import { PitcherHeatMap } from '../components/PitcherHeatmap';
+import BatterHeatMap from '../components/BatterHeatmap';
+import PitcherHeatMap from '../components/PitcherHeatmap';
 
 function PlayerDetail() {
   const { id } = useParams(); // 取得 URL 中的球員 ID

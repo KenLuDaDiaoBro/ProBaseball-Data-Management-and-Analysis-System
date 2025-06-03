@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import PitcherHeatMap from '../components/PitcherHeatmap';
+import PitchTypePieChart from '../components/PitchTypePieChart';
 
 function MatchUp() {
   const [players, setPlayers] = useState([]);
@@ -145,6 +147,7 @@ function MatchUp() {
   const handleSubmit = async () => {
     if (selectedPitcher && selectedBatter) {
       try {
+        setIsLoading(true);
         const response = await fetch(
           `http://127.0.0.1:5000/api/matchup?pitcher=${selectedPitcher.id}&batter=${selectedBatter.id}`
         );
@@ -152,9 +155,7 @@ function MatchUp() {
           throw new Error("Failed to fetch matchup data");
         }
         const data = await response.json();
-        console.log("Matchup data:", data);
         setMatchupData(data);
-        // TODO: 將 data 顯示在畫面上（例如 setMatchupData(data)）
       } catch (error) {
         console.error("Error fetching matchup:", error);
         alert("取得對戰資料時發生錯誤");
@@ -165,7 +166,6 @@ function MatchUp() {
   };
 
   useEffect(() => {
-    setIsLoading(true);
     if (!matchupData || matchupData.length === 0) return;
 
     const statsByYear = {};
@@ -303,11 +303,11 @@ function MatchUp() {
       </div>
       <div className="matchup-table-wrapper">
         {isLoading ? (
-          <div className="loading">Loading...</div>
+          <p>Loading…</p>
         ) : (
         matchupData.length > 0 && (
           <div className="matchup-result">
-            <h3>Matchup Results</h3>
+            <h3 className="matchup-result-label">Matchup Results</h3>
             <table className="matchup-table">
               <thead>
                 <tr>
@@ -338,6 +338,11 @@ function MatchUp() {
                 })}
               </tbody>
             </table>
+            <>
+              <h4 className="matchup-pie-label">Pitch Type Distribution</h4>
+              <PitchTypePieChart pitchData={matchupData} />
+              {/* 你原本的表格 */}
+            </>
           </div>
         ))}
       </div>

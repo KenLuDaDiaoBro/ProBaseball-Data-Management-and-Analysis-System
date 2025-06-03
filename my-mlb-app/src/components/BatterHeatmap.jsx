@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function BatterHeatMap({player}) {
+function BatterHeatMap({player}) {
   const CELL = 40;
   const layout = [
     'AAAABBBB',
@@ -166,3 +166,5 @@ export function BatterHeatMap({player}) {
     </div>
   );
 }
+
+export default BatterHeatMap;

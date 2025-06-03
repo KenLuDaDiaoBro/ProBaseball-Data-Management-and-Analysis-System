@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function PitcherHeatMap({ player }) {
+function PitcherHeatMap({ player }) {
   const CELL = 40;
   const layout = [
     'AAAABBBB',
@@ -172,3 +172,5 @@ export function PitcherHeatMap({ player }) {
     </div>
   );
 }
+
+export default PitcherHeatMap;
