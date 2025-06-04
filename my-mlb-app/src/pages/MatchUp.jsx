@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import PitcherHeatMap from '../components/PitcherHeatmap';
 import PitchTypePieChart from '../components/PitchTypePieChart';
+import PitcherHeatMap from '../components/PitcherHeatmap';
 
 function MatchUp() {
   const [players, setPlayers] = useState([]);
@@ -20,7 +20,12 @@ function MatchUp() {
 
   const [matchupData, setMatchupData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [noDataFound, setNoDataFound] = useState(false);
   const [yearStats, setYearStats] = useState({});
+  const [totalPitch, setTotalPitch] = useState({
+    PZ1: 0, PZ2: 0, PZ3: 0, PZ4: 0, PZ5: 0, PZ6: 0, PZ7: 0, PZ8: 0, PZ9: 0,
+    PZLU: 0, PZRU: 0, PZLD: 0, PZRD: 0
+  });
 
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/players")
@@ -122,7 +127,7 @@ function MatchUp() {
       
   const handleSelectOption = (opt) => {
     setSearchTerm("");
-    setFilteredOptions([]);      // ← 這裡清空 filteredOptions
+    setFilteredOptions([]);
     if (opt.type === "player") {
     navigate(`/playerDetail/${opt.id}`);
     } else {
@@ -131,8 +136,8 @@ function MatchUp() {
   };
 
   const handleSelectPitcher = (p) => {
-    setPitcherInput(p.Name);       // 顯示選擇的名字
-    setSelectedPitcher(p);         // 記住選擇的物件
+    setPitcherInput(p.Name);
+    setSelectedPitcher(p);
     setFilteredPitchers([]);
     setIsPitcherFocused(false);
   };
@@ -148,6 +153,7 @@ function MatchUp() {
     if (selectedPitcher && selectedBatter) {
       try {
         setIsLoading(true);
+        setNoDataFound(false);
         const response = await fetch(
           `http://127.0.0.1:5000/api/matchup?pitcher=${selectedPitcher.id}&batter=${selectedBatter.id}`
         );
@@ -155,7 +161,13 @@ function MatchUp() {
           throw new Error("Failed to fetch matchup data");
         }
         const data = await response.json();
-        setMatchupData(data);
+        if (data.length === 0) {
+          setIsLoading(false);
+          setNoDataFound(true);
+          setMatchupData([]);
+        } else {
+          setMatchupData(data);
+        }
       } catch (error) {
         console.error("Error fetching matchup:", error);
         alert("取得對戰資料時發生錯誤");
@@ -169,6 +181,10 @@ function MatchUp() {
     if (!matchupData || matchupData.length === 0) return;
 
     const statsByYear = {};
+    const newTotalPitch = {
+      PZ1: 0, PZ2: 0, PZ3: 0, PZ4: 0, PZ5: 0, PZ6: 0, PZ7: 0, PZ8: 0, PZ9: 0,
+      PZLU: 0, PZRU: 0, PZLD: 0, PZRD: 0
+    };
 
     matchupData.forEach(row => {
       const year = new Date(row.game_date).getFullYear();
@@ -196,6 +212,19 @@ function MatchUp() {
       if (event === 'strikeout') s.SO++;
       if (event === 'walk') s.BB++;
       if (event === 'hit_by_pitch') s.HBP++;
+
+      const zone = row.zone;
+      if (zone >= 1 && zone <= 9) {
+        newTotalPitch[`PZ${zone}`]++;
+      } else if (zone === 11) {
+        newTotalPitch.PZLU++;
+      } else if (zone === 12) {
+        newTotalPitch.PZRU++;
+      } else if (zone === 13) {
+        newTotalPitch.PZLD++;
+      } else if (zone === 14) {
+        newTotalPitch.PZRD++;
+      }
     });
 
     const total = Object.values(statsByYear).reduce((sum, year) => {
@@ -204,14 +233,16 @@ function MatchUp() {
       }
       return sum;
     }, {});
-
+    console.log("Total pitch:", totalPitch);
     statsByYear['Total'] = total;
     setYearStats(statsByYear);
+    setTotalPitch(newTotalPitch);
     setIsLoading(false);
   }, [matchupData]);
 
   return (
     <div className="matchup-container">
+      <h1 className="matchup-title">Matchup Search</h1>
       <div className="fixed-header-bg" />
       <button className="back-button" onClick={()=>navigate(-1)}>←</button>
       <div className="home-image">
@@ -303,47 +334,54 @@ function MatchUp() {
       </div>
       <div className="matchup-table-wrapper">
         {isLoading ? (
-          <p>Loading…</p>
+          <p style={{ marginTop: '200px' }}>Loading…</p>
+        ) : noDataFound ? (
+          <p style={{ marginTop: '200px' }}>Data No found</p>
         ) : (
-        matchupData.length > 0 && (
-          <div className="matchup-result">
-            <h3 className="matchup-result-label">Matchup Results</h3>
-            <table className="matchup-table">
-              <thead>
-                <tr>
-                  <th>Year</th>
-                  <th>PA</th><th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th>
-                  <th>SO</th><th>BB</th><th>HBP</th>
-                  <th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {['2021', '2022', '2023', '2024', 'Total'].map(year => {
-                  const s = yearStats[year];
-                  if (!s) return null;
+          matchupData.length > 0 && (
+            <div className="matchup-result">
+              <h3 className="matchup-result-label">Matchup Results</h3>
+              <table className="matchup-table">
+                <thead>
+                  <tr>
+                    <th>Year</th>
+                    <th>PA</th><th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th>
+                    <th>SO</th><th>BB</th><th>HBP</th>
+                    <th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {['2021', '2022', '2023', '2024', 'Total'].map(year => {
+                    const s = yearStats[year];
+                    if (!s) return null;
 
-                  const AVG = s.AB ? (s.H / s.AB).toFixed(3) : '-';
-                  const OBP = (s.AB + s.BB + s.HBP) ? ((s.H + s.BB + s.HBP) / (s.AB + s.BB + s.HBP)).toFixed(3) : '-';
-                  const SLG = s.AB ? (s.TB / s.AB).toFixed(3) : '-';
-                  const OPS = (OBP !== '-' && SLG !== '-') ? (parseFloat(OBP) + parseFloat(SLG)).toFixed(3) : '-';
+                    const AVG = s.AB ? (s.H / s.AB).toFixed(3) : '-';
+                    const OBP = (s.AB + s.BB + s.HBP) ? ((s.H + s.BB + s.HBP) / (s.AB + s.BB + s.HBP)).toFixed(3) : '-';
+                    const SLG = s.AB ? (s.TB / s.AB).toFixed(3) : '-';
+                    const OPS = (OBP !== '-' && SLG !== '-') ? (parseFloat(OBP) + parseFloat(SLG)).toFixed(3) : '-';
 
-                  return (
-                    <tr key={year}>
-                      <td>{year}</td>
-                      <td>{s.PA}</td><td>{s.AB}</td><td>{s.H}</td><td>{s['2B']}</td><td>{s['3B']}</td><td>{s.HR}</td>
-                      <td>{s.SO}</td><td>{s.BB}</td><td>{s.HBP}</td>
-                      <td>{AVG}</td><td>{OBP}</td><td>{SLG}</td><td>{OPS}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <>
-              <h4 className="matchup-pie-label">Pitch Type Distribution</h4>
-              <PitchTypePieChart pitchData={matchupData} />
-              {/* 你原本的表格 */}
-            </>
-          </div>
+                    return (
+                      <tr key={year}>
+                        <td>{year}</td>
+                        <td>{s.PA}</td><td>{s.AB}</td><td>{s.H}</td><td>{s['2B']}</td><td>{s['3B']}</td><td>{s.HR}</td>
+                        <td>{s.SO}</td><td>{s.BB}</td><td>{s.HBP}</td>
+                        <td>{AVG}</td><td>{OBP}</td><td>{SLG}</td><td>{OPS}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div className="matchup-charts-container"> {/* 新增容器 */}
+                <div className="matchup-chart-wrapper">
+                  <h4 className="matchup-pie-label">Pitch Type Distribution</h4>
+                  <PitchTypePieChart pitchData={matchupData} />
+                </div>
+                <div className="matchup-chart-wrapper">
+                  <h4 className="matchup-heatmap-label">Pitch Location Heatmap</h4>
+                  <PitcherHeatMap player={totalPitch} />
+                </div>
+              </div>
+            </div>
         ))}
       </div>
       

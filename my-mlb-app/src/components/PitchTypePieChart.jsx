@@ -37,8 +37,12 @@ const PitchTypePieChart = ({ pitchData }) => {
     pitchCount[type] = (pitchCount[type] || 0) + 1;
   });
 
-  const labels = Object.keys(pitchCount);
-  const counts = Object.values(pitchCount);
+  const sortedPitchCount = Object.entries(pitchCount).sort((a, b) => b[1] - a[1]);
+
+  const labels = sortedPitchCount.map(([type]) => type);
+  const counts = sortedPitchCount.map(([, count]) => count);
+
+  const totalCount = counts.reduce((sum, count) => sum + count, 0);
 
   const chartData = {
     labels,
@@ -56,9 +60,24 @@ const PitchTypePieChart = ({ pitchData }) => {
     ],
   };
 
+  const options = {
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.label || 'Unknown';
+            const value = context.raw || 0;
+            const percentage = totalCount > 0 ? ((value / totalCount) * 100).toFixed(1) : 0;
+            return `${label}: ${value} (${percentage}%)`;
+          },
+        },
+      },
+    },
+  };
+
   return (
     <div style={{ maxWidth: 400, margin: '0 auto'}}>
-      <Pie data={chartData} />
+      <Pie data={chartData} options={options} />
     </div>
   );
 };
