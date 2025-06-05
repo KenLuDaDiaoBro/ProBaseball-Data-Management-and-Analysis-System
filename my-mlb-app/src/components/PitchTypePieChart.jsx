@@ -29,7 +29,6 @@ const pitchTypeMap = {
 };
 
 const PitchTypePieChart = ({ pitchData }) => {
-  // 統計球種出現次數
   const pitchCount = {};
 
   pitchData.forEach(p => {
@@ -44,16 +43,20 @@ const PitchTypePieChart = ({ pitchData }) => {
 
   const totalCount = counts.reduce((sum, count) => sum + count, 0);
 
+  const percentages = counts.map(count => totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : 0);
+  const displayLabels = labels.map((label, index) => `${label} (${percentages[index]}%)`);
+
+  const backgroundColors = [
+    '#FF6384', '#36A2EB', '#FFCE56', '#8BC34A', '#FF9800',
+    '#9C27B0', '#00BCD4', '#E91E63', '#795548', '#607D8B'
+  ];
+
   const chartData = {
-    labels,
+    labels: displayLabels,
     datasets: [
       {
-        label: 'Pitch Type Usage',
         data: counts,
-        backgroundColor: [
-          '#FF6384', '#36A2EB', '#FFCE56', '#8BC34A', '#FF9800',
-          '#9C27B0', '#00BCD4', '#E91E63', '#795548', '#607D8B'
-        ],
+        backgroundColor: backgroundColors,
         borderColor: '#fff',
         borderWidth: 1,
       },
@@ -62,13 +65,18 @@ const PitchTypePieChart = ({ pitchData }) => {
 
   const options = {
     plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {
+          padding: 15, // 增加圖例項目之間的垂直間距
+        },
+      },
       tooltip: {
         callbacks: {
           label: (context) => {
-            const label = context.label || 'Unknown';
             const value = context.raw || 0;
-            const percentage = totalCount > 0 ? ((value / totalCount) * 100).toFixed(1) : 0;
-            return `${label}: ${value} (${percentage}%)`;
+            return `Total Pitch Usage: ${value}`;
           },
         },
       },
@@ -76,8 +84,9 @@ const PitchTypePieChart = ({ pitchData }) => {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '0 auto'}}>
+    <div style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center'}}>
       <Pie data={chartData} options={options} />
+      <p style={{ textAlign: 'center', marginTop: '20px' }}>Total Pitch: {totalCount}</p>
     </div>
   );
 };
