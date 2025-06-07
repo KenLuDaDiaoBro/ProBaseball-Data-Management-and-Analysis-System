@@ -1079,7 +1079,7 @@ button:focus-visible {
 }
 
 /* ============================= */
-/* ===== PlayerSearch 頁面 ===== */
+/* ===== Compare 頁面 ===== */
 /* ============================= */
 .compare-container{
   position: relative;
@@ -1090,6 +1090,152 @@ button:focus-visible {
   box-sizing: border-box;
   overflow-y: auto;
 }
+
+.compare-year-select-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.compare-year-select-label {
+  font-weight: bold;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.compare-year-select-dropdown {
+  padding: 6px 12px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  transition: border-color 0.3s ease;
+}
+
+.compare-year-select-dropdown:hover,
+.compare-year-select-dropdown:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.compare-table-section {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.compare-table-section h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+.compare-table th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.compare-table td {
+  background-color: #fff;
+  transition: background-color 0.3s ease;
+}
+
+.compare-table td[style*='bold'] {
+  background-color: #e6f4ff; /* 強調欄位變色 */
+  font-weight: bold !important;
+}
+
+/* 表格中 Point 欄改善配色 */
+.compare-table td:last-child,
+.compare-table th:last-child {
+    background-color: #007bff;  /* 藍底 */
+    color: white;
+    font-weight: bold;
+}
+
+.heatmap-section-wrapper {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.heatmap-section {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.heatmap-item {
+    flex: 1 1 45%;
+    display: flex;
+    justify-content: center;
+}
+
+.heatmap-inner {
+    text-align: center;
+    max-width: 100%;
+}
+
+.heatmap-inner h4 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.pie-section-wrapper {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.pie-section {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.pie-item {
+    flex: 1 1 45%;
+    display: flex;
+    justify-content: center;
+}
+
+.pie-inner {
+    text-align: center;
+    max-width: 100%;
+}
+
+.pie-inner h4 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #555;
+}
+
 
 /* ========== 搜尋列 ========== */
 .search-box {

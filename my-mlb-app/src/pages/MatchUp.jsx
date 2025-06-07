@@ -332,6 +332,7 @@ function MatchUp() {
         </div>
         <button className="matchup-submit-button" onClick={handleSubmit}>Submit</button>
       </div>
+      
       <div className="matchup-table-wrapper">
         {isLoading ? (
           <p style={{ marginTop: '200px' }}>Loading…</p>

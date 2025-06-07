@@ -65,18 +65,22 @@ const PitchTypePieChart = ({ pitchData }) => {
 
   const options = {
     plugins: {
+      datalabels: {
+        display: false, // Disable data labels on the chart
+      },
       legend: {
         display: true,
         position: 'bottom',
         labels: {
-          padding: 15, // 增加圖例項目之間的垂直間距
+          padding: 18,
         },
       },
       tooltip: {
         callbacks: {
           label: (context) => {
+            const label = context.label.split(' (')[0] || '';
             const value = context.raw || 0;
-            return `Total Pitch Usage: ${value}`;
+            return `${label} total usage: ${value}`;
           },
         },
       },
@@ -84,7 +88,7 @@ const PitchTypePieChart = ({ pitchData }) => {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center'}}>
+    <div style={{ minWidth: 350, margin: '0 auto', textAlign: 'center'}}>
       <Pie data={chartData} options={options} />
       <p style={{ textAlign: 'center', marginTop: '20px' }}>Total Pitch: {totalCount}</p>
     </div>

@@ -6,7 +6,8 @@ import TeamDetail from "./pages/TeamDetail";
 import LeaderBoard from "./pages/LeaderBoard";
 import LeaderBoardDetail from "./pages/LeaderBoardDetail";
 import MatchUp from "./pages/MatchUp";
-import Compare from "./pages/Compare";
+import PitcherCompare from "./pages/PitcherCompare";
+import BatterCompare from "./pages/BatterCompare";
 
 function App() {
   return (
@@ -19,7 +20,8 @@ function App() {
         <Route path="/leaderboard" element={<LeaderBoard />} />
         <Route path="/LeaderBoardDetail" element={<LeaderBoardDetail />} />
         <Route path="/MatchUp" element={<MatchUp />} />
-        <Route path="/Compare" element={<Compare />} />
+        <Route path="/PitcherCompare" element={<PitcherCompare />} />
+        <Route path="/BatterCompare" element={<BatterCompare />} />
       </Routes>
     </Router>
   );

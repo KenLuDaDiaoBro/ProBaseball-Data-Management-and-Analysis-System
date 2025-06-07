@@ -32,10 +32,10 @@ function Home() {
           <Link to="/matchup">
             <button className="home-sub-button">BVP</button>
           </Link>
-          <Link to="/Compare">
+          <Link to="/PitcherCompare">
             <button className="home-sub-button">PVP</button>
           </Link>
-          <Link to="/Compare">
+          <Link to="/BatterCompare">
             <button className="home-sub-button">BVB</button>
           </Link>
         </div>
