@@ -1093,8 +1093,12 @@ button:focus-visible {
 
 .compare-year-select-section {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
+  gap: 40px;
   margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 .compare-year-select-label {
@@ -1214,7 +1218,7 @@ button:focus-visible {
 
 .pie-section {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     gap: 40px;
     flex-wrap: wrap;
 }
@@ -1223,20 +1227,24 @@ button:focus-visible {
     flex: 1 1 45%;
     display: flex;
     justify-content: center;
+    min-width: 300px;
 }
 
 .pie-inner {
     text-align: center;
-    max-width: 100%;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .pie-inner h4 {
     font-size: 16px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     color: #555;
 }
-
-
 /* ========== 搜尋列 ========== */
 .search-box {
   position: fixed;

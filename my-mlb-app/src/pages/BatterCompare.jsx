@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import PitchTypePieChart from '../components/PitchTypePieChart';
-import PitcherHeatMap from '../components/PitcherHeatmap';
+import { useNavigate } from "react-router-dom";
+import BatterHeatMap from '../components/BatterHeatmap';
 
 function BatterCompare() {
     const [players, setPlayers] = useState([]);
@@ -21,15 +20,12 @@ function BatterCompare() {
     const [confirmedPitcher1, setConfirmedPitcher1] = useState(null);
     const [confirmedPitcher2, setConfirmedPitcher2] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(false);
     const [playerData1, setPlayerStats1] = useState([]);
     const [playerData2, setPlayerStats2] = useState([]);
-    const [pitcherPitches1, setPitcherPitches1] = useState([]);
-    const [pitcherPitches2, setPitcherPitches2] = useState([]);
-    const [commonYears, setCommonYears] = useState([]);
-    const [selectedYear, setSelectedYear] = useState(null);
+    const [selectedYear1, setSelectedYear1] = useState(null);
+    const [selectedYear2, setSelectedYear2] = useState(null);
 
-    const displayKeys = ["Name", "W", "L", "ERA", "IP", "H", "R", "ER", "HR", "SO", "K9", "BB", "BB9", "WHIP", "Chase", "Whiff"];
+    const displayKeys = ["Name", "PA", "H", "H2", "H3", "HR", "RBI", "SO", "BB", "SB", "AVG", "OBP", "SLG", "OPS", "Chase", "Whiff"];
 
     useEffect(() => {
         fetch("http://127.0.0.1:5000/api/players")
@@ -102,7 +98,7 @@ function BatterCompare() {
         if (!term) return setFilteredPitchers1([]);
 
         const matches = players
-        .filter((p) => p.Type === "Pitcher")
+        .filter((p) => p.Type === "Batter")
         .map((p) => {
             const name = p.Name.toLowerCase();
             let score = 0;
@@ -122,7 +118,7 @@ function BatterCompare() {
         if (!term) return setFilteredPitchers2([]);
 
         const matches = players
-        .filter((p) => p.Type === "Pitcher")
+        .filter((p) => p.Type === "Batter")
         .map((p) => {
             const name = p.Name.toLowerCase();
             let score = 0;
@@ -155,7 +151,6 @@ function BatterCompare() {
         if (selectedPitcher1 && selectedPitcher2) {
             try {
                 setIsLoading(true);
-                setIsSubmitted(true);
                 setConfirmedPitcher1(selectedPitcher1);
                 setConfirmedPitcher2(selectedPitcher2);
                 const res1 = await fetch("http://127.0.0.1:5000/api/selected_player", {
@@ -180,23 +175,10 @@ function BatterCompare() {
                 setPlayerStats2(data2);
                 console.log("Player 2 data:", data2);
 
-                const years1 = new Set(data1.map(p => p.Year));
-                const years2 = new Set(data2.map(p => p.Year));
-                const common = [...years1].filter(y => years2.has(y));
-                setCommonYears(common);
-                if (common.length > 0) {
-                    setSelectedYear(common[0]); // 預設選第一個年份
-                } else {
-                    setSelectedYear(null);
-                }
-
-                const pitchRes1 = await fetch(`http://127.0.0.1:5000/api/PitcherPitches?pitcher=${selectedPitcher1.id}`);
-                const pitchData1 = await pitchRes1.json();
-                setPitcherPitches1(pitchData1);
-
-                const pitchRes2 = await fetch(`http://127.0.0.1:5000/api/PitcherPitches?pitcher=${selectedPitcher2.id}`);
-                const pitchData2 = await pitchRes2.json();
-                setPitcherPitches2(pitchData2);
+                const uniqueData1 = getUniqueData(data1);
+                const uniqueData2 = getUniqueData(data2);
+                setSelectedYear1(uniqueData1[0]?.Year || null);
+                setSelectedYear2(uniqueData2[0]?.Year || null);
 
             } catch (error) {
                 console.error("Error fetching matchup:", error);
@@ -209,10 +191,10 @@ function BatterCompare() {
         }
     };
     
-    const reverseScoreKeys = new Set(["ERA", "BB", "BB9", "WHIP"]); // 可以自行擴充
+    const reverseScoreKeys = new Set(["SO", "Chase", "Whiff"]);
 
     const compareValue = (key, a, b) => {
-        if (a == null || b == null) return 0; // 缺資料就不計分
+        if (a == null || b == null) return 0;
         if (typeof a === "string") a = parseFloat(a);
         if (typeof b === "string") b = parseFloat(b);
         if (isNaN(a) || isNaN(b)) return 0;
@@ -223,9 +205,32 @@ function BatterCompare() {
         else return a > b ? 1 : 0;
     };
 
+    const getUniqueData = (playerData) => {
+        if (!playerData?.length) return [];
+
+        const yearMap = new Map();
+
+        playerData.forEach(data => {
+            const year = data.Year;
+            const team = data.Team;
+
+            if (!yearMap.has(year)) {
+                yearMap.set(year, data);
+            }
+            else if (team.includes('Teams')) {
+                yearMap.set(year, data);
+            }
+        });
+
+        return Array.from(yearMap.values()).sort((a, b) => b.Year - a.Year);
+    };
+
+    const uniqueData1 = getUniqueData(playerData1);
+    const uniqueData2 = getUniqueData(playerData2);
+
     return (
     <div className="compare-container">
-        <h1 className="matchup-title">Pitcher vs Pitcher</h1>
+        <h1 className="matchup-title">Batter vs Batter</h1>
         <div className="fixed-header-bg" />
         <button className="back-button" onClick={()=>navigate(-1)}>←</button>
         <div className="home-image">
@@ -251,7 +256,7 @@ function BatterCompare() {
                 <li
                     key={i}
                     className="search-suggestion-item"
-                    onClick={() => handleSelectOption(opt)}  // ← 呼叫改成 handleSelectOption
+                    onClick={() => handleSelectOption(opt)}
                 >
                     {opt.type === "player" ? opt.Name : opt.code}
                 </li>
@@ -260,12 +265,11 @@ function BatterCompare() {
         )}
         </div>
         <div className="matchup-search-section">
-            {/* Pitcher search */}
-            <label className="matchup-search-label">Pitcher A:</label>
+            <label className="matchup-search-label">Batter A:</label>
             <div className="matchup-search-box">
             <input
                 type="text"
-                placeholder="Search for a pitcher..."
+                placeholder="Search for a batter..."
                 value={pitcherInput1}
                 onChange={(e) => setPitcherInput1(e.target.value)}
                 onFocus={() => setIsPitcherFocused1(true)}
@@ -276,9 +280,9 @@ function BatterCompare() {
                 <ul className="matchup-search-suggestions">
                 {filteredPitchers1.map((p, i) => (
                     <li
-                    key={i}
-                    className="matchup-search-suggestion-item"
-                    onMouseDown={() => handleSelectPitcher1(p)}
+                        key={i}
+                        className="matchup-search-suggestion-item"
+                        onMouseDown={() => handleSelectPitcher1(p)}
                     >
                     {p.Name}
                     </li>
@@ -287,7 +291,7 @@ function BatterCompare() {
             )}
             </div>
 
-            <label className="matchup-search-label">Pitcher B:</label>
+            <label className="matchup-search-label">Batter B:</label>
             <div className="matchup-search-box">
             <input
                 type="text"
@@ -302,9 +306,9 @@ function BatterCompare() {
                 <ul className="matchup-search-suggestions">
                 {filteredPitchers2.map((b, i) => (
                     <li
-                    key={i}
-                    className="matchup-search-suggestion-item"
-                    onMouseDown={() => handleSelectPitcher2(b)}
+                        key={i}
+                        className="matchup-search-suggestion-item"
+                        onMouseDown={() => handleSelectPitcher2(b)}
                     >
                     {b.Name}
                     </li>
@@ -317,41 +321,62 @@ function BatterCompare() {
 
         {isLoading ? (
             <p style={{ marginTop: '200px' }}>Loading…</p>
-        ) : commonYears.length === 0 && isSubmitted ? (
-            <p style={{ marginTop: '200px' }}>
-                No matched year between {confirmedPitcher1?.Name} and {confirmedPitcher2?.Name}.
-            </p>
         ) : (
             <>
-                {commonYears.length > 0 && (
-                <div className="compare-year-select-section">
-                    <label className="compare-year-select-label">Year: </label>
-                    <select
-                    className="compare-year-select-dropdown"
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    >
-                    {commonYears.map((year) => (
-                        <option key={year} value={year}>
-                        {year}
-                        </option>
-                    ))}
-                    </select>
-                </div>
+                {confirmedPitcher1 && confirmedPitcher2 && (
+                    <div className="compare-year-select-section">
+                        <div style={{ marginRight: "20px" }}>
+                        <label className="compare-year-select-label">{confirmedPitcher1.Name} Year: </label>
+                        <select
+                            className="compare-year-select-dropdown"
+                            value={selectedYear1 || ''}
+                            onChange={(e) => setSelectedYear1(parseInt(e.target.value))}
+                        >
+                            {uniqueData1.map((data, index) => (
+                                <option key={`${data.Year}-${index}`} value={data.Year}>
+                                    {data.Year}
+                                </option>
+                            ))}
+                        </select>
+                        </div>
+
+                        <div>
+                        <label className="compare-year-select-label">{confirmedPitcher2.Name} Year: </label>
+                        <select
+                            className="compare-year-select-dropdown"
+                            value={selectedYear2 || ''}
+                            onChange={(e) => setSelectedYear2(parseInt(e.target.value))}
+                        >
+                            {uniqueData2.map((data, index) => (
+                                <option key={`${data.Year}-${index}`} value={data.Year}>
+                                    {data.Year}
+                                </option>
+                            ))}
+                        </select>
+                        </div>
+                    </div>
                 )}
 
-                {selectedYear &&
-                playerData1.length > 0 &&
-                playerData2.length > 0 &&
-                (() => {
-                    const player1 = playerData1.find((d) => d.Year === selectedYear);
-                    const player2 = playerData2.find((d) => d.Year === selectedYear);
+                {playerData1.length > 0 && playerData2.length > 0 && (() => {
+                    const player1 = uniqueData1.find((d) => d.Year === selectedYear1);
+                    const player2 = uniqueData2.find((d) => d.Year === selectedYear2);
 
                     const keys = displayKeys;
-                    const noNameKeys = keys.filter((key) => key !== "Name");
+                    const noNameKeys = keys.filter((key) => key !== "Name" && key != "PA");
 
                     let player1Score = 0;
                     let player2Score = 0;
+
+                    const formatNumber = (val, key) => {
+
+                        const twoDecimalKeys = new Set(["AVG", "OBP", "SLG", "OPS"]);
+                        const oneDecimalKeys = new Set(["Chase", "Whiff"]);
+
+                        if (twoDecimalKeys.has(key)) return val.toFixed(3);
+                        if (oneDecimalKeys.has(key)) return val.toFixed(1);
+
+                        return val;
+                    };
 
                     noNameKeys.forEach((key) => {
                     const result = compareValue(key, player1[key], player2[key]);
@@ -369,15 +394,17 @@ function BatterCompare() {
                             <thead>
                                 <tr>
                                     <th>Stat</th>
+                                    <th>PA</th>
                                     {noNameKeys.map((key) => (
-                                        <th key={key}>{key === "Chase" ? "Chase%" : key === "Whiff" ? "Whiff%" : key}</th>
+                                        <th key={key}>{key === "H2" ? "2B" : key === "H3" ? "3B" : key === "Chase" ? "Chase%" : key === "Whiff" ? "Whiff%" : key}</th>
                                     ))}
                                     <th>Point</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>{confirmedPitcher1?.Name}</td>
+                                    <td style={{fontWeight: 'bold', backgroundColor: 'transparent'}}>{confirmedPitcher1.Name}</td>
+                                    <td style={{fontWeight: 'bold', backgroundColor: 'transparent'}}>{player1.PA}</td>
                                     {noNameKeys.map((key) => (
                                         <td
                                             key={key}
@@ -397,7 +424,7 @@ function BatterCompare() {
                                                     : 'transparent',
                                             }}
                                         >
-                                            {player1[key]}
+                                            {formatNumber(player1[key], key)}
                                         </td>
                                     ))}
                                     <td
@@ -416,13 +443,16 @@ function BatterCompare() {
                                                 ? '#ffe6e6'
                                                 : '#f0f0f0',
                                         }}
-                                    >{player1Score}</td>
+                                    >
+                                        {player1Score}
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td>{confirmedPitcher2?.Name}</td>
+                                    <td style={{fontWeight: 'bold', backgroundColor: 'transparent'}}>{confirmedPitcher2.Name}</td>
+                                    <td style={{fontWeight: 'bold', backgroundColor: 'transparent'}}>{player2.PA}</td>
                                     {noNameKeys.map((key) => (
                                         <td
-                                            key={key}
+                                            key={key}   
                                             style={{
                                                 fontWeight: 'bold',
                                                 color:
@@ -439,7 +469,7 @@ function BatterCompare() {
                                                     : 'transparent',
                                             }}
                                         >
-                                            {player2[key]}
+                                            {formatNumber(player2[key], key)}
                                         </td>
                                     ))}
                                     <td
@@ -458,7 +488,9 @@ function BatterCompare() {
                                                 ? '#ffe6e6'
                                                 : '#f0f0f0',
                                         }}
-                                    >{player2Score}</td>
+                                    >
+                                        {player2Score}
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -469,32 +501,14 @@ function BatterCompare() {
                                 <div className="heatmap-item">
                                     <div className="heatmap-inner">
                                         <h4>{confirmedPitcher1.Name}</h4>
-                                        <PitcherHeatMap player={player1} />
+                                        <BatterHeatMap player={player1} />
                                     </div>
                                 </div>
 
                                 <div className="heatmap-item">
                                     <div className="heatmap-inner">
                                         <h4>{confirmedPitcher2.Name}</h4>
-                                        <PitcherHeatMap player={player2} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="pie-section-wrapper">
-                            <h3 className="section-title">Pitch Type Pie Charts</h3>
-                            <div className="pie-section">
-                                <div className="pie-item">
-                                    <div className="pie-inner">
-                                        <h4>{confirmedPitcher1.Name}</h4>
-                                        <PitchTypePieChart pitchData={pitcherPitches1} />
-                                    </div>
-                                </div>
-
-                                <div className="pie-item">
-                                    <div className="pie-inner">
-                                        <h4>{confirmedPitcher2.Name}</h4>
-                                        <PitchTypePieChart pitchData={pitcherPitches2} />
+                                        <BatterHeatMap player={player2} />
                                     </div>
                                 </div>
                             </div>

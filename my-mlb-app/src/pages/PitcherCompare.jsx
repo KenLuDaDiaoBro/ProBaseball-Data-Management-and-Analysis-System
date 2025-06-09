@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PitchTypePieChart from '../components/PitchTypePieChart';
 import PitcherHeatMap from '../components/PitcherHeatmap';
 
@@ -21,13 +21,14 @@ function PitcherCompare() {
     const [confirmedPitcher1, setConfirmedPitcher1] = useState(null);
     const [confirmedPitcher2, setConfirmedPitcher2] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(false);
     const [playerData1, setPlayerStats1] = useState([]);
     const [playerData2, setPlayerStats2] = useState([]);
+    const [rawPitches1, setRawPitches1] = useState([]);
+    const [rawPitches2, setRawPitches2] = useState([]);
     const [pitcherPitches1, setPitcherPitches1] = useState([]);
     const [pitcherPitches2, setPitcherPitches2] = useState([]);
-    const [commonYears, setCommonYears] = useState([]);
-    const [selectedYear, setSelectedYear] = useState(null);
+    const [selectedYear1, setSelectedYear1] = useState(null);
+    const [selectedYear2, setSelectedYear2] = useState(null);
 
     const displayKeys = ["Name", "W", "L", "ERA", "IP", "H", "R", "ER", "HR", "SO", "K9", "BB", "BB9", "WHIP", "Chase", "Whiff"];
 
@@ -137,6 +138,16 @@ function PitcherCompare() {
         setFilteredPitchers2(matches);
     }, [pitcherInput2, players]);
 
+    useEffect(() => {
+        const filtered1 = filterPitchesByYear(rawPitches1, selectedYear1);
+        setPitcherPitches1(filtered1);
+    }, [rawPitches1, selectedYear1]);
+
+    useEffect(() => {
+        const filtered2 = filterPitchesByYear(rawPitches2, selectedYear2);
+        setPitcherPitches2(filtered2);
+    }, [rawPitches2, selectedYear2]);
+
     const handleSelectPitcher1 = (p) => {
         setPitcherInput1(p.Name);
         setSelectedPitcher1(p);
@@ -155,7 +166,6 @@ function PitcherCompare() {
         if (selectedPitcher1 && selectedPitcher2) {
             try {
                 setIsLoading(true);
-                setIsSubmitted(true);
                 setConfirmedPitcher1(selectedPitcher1);
                 setConfirmedPitcher2(selectedPitcher2);
                 const res1 = await fetch("http://127.0.0.1:5000/api/selected_player", {
@@ -180,23 +190,18 @@ function PitcherCompare() {
                 setPlayerStats2(data2);
                 console.log("Player 2 data:", data2);
 
-                const years1 = new Set(data1.map(p => p.Year));
-                const years2 = new Set(data2.map(p => p.Year));
-                const common = [...years1].filter(y => years2.has(y));
-                setCommonYears(common);
-                if (common.length > 0) {
-                    setSelectedYear(common[0]); // 預設選第一個年份
-                } else {
-                    setSelectedYear(null);
-                }
+                const uniqueData1 = getUniqueData(data1);
+                const uniqueData2 = getUniqueData(data2);
+                setSelectedYear1(uniqueData1[0]?.Year || null);
+                setSelectedYear2(uniqueData2[0]?.Year || null);
 
-                const pitchRes1 = await fetch(`http://127.0.0.1:5000/api/PitcherPitches?pitcher=${confirmedPitcher1.id}`);
+                const pitchRes1 = await fetch(`http://127.0.0.1:5000/api/PitcherPitches?pitcher=${selectedPitcher1.id}`);
                 const pitchData1 = await pitchRes1.json();
-                setPitcherPitches1(pitchData1);
+                setRawPitches1(pitchData1);
 
-                const pitchRes2 = await fetch(`http://127.0.0.1:5000/api/PitcherPitches?pitcher=${confirmedPitcher2.id}`);
+                const pitchRes2 = await fetch(`http://127.0.0.1:5000/api/PitcherPitches?pitcher=${selectedPitcher2.id}`);
                 const pitchData2 = await pitchRes2.json();
-                setPitcherPitches2(pitchData2);
+                setRawPitches2(pitchData2);
 
             } catch (error) {
                 console.error("Error fetching matchup:", error);
@@ -209,10 +214,10 @@ function PitcherCompare() {
         }
     };
     
-    const reverseScoreKeys = new Set(["ERA", "BB", "BB9", "WHIP"]); // 可以自行擴充
+    const reverseScoreKeys = new Set(["ERA", "BB", "BB9", "WHIP"]);
 
     const compareValue = (key, a, b) => {
-        if (a == null || b == null) return 0; // 缺資料就不計分
+        if (a == null || b == null) return 0;
         if (typeof a === "string") a = parseFloat(a);
         if (typeof b === "string") b = parseFloat(b);
         if (isNaN(a) || isNaN(b)) return 0;
@@ -222,6 +227,37 @@ function PitcherCompare() {
         if (isReversed) return a < b ? 1 : 0;
         else return a > b ? 1 : 0;
     };
+
+    const getUniqueData = (playerData) => {
+        if (!playerData?.length) return [];
+
+        const yearMap = new Map();
+
+        playerData.forEach(data => {
+            const year = data.Year;
+            const team = data.Team;
+
+            if (!yearMap.has(year)) {
+                yearMap.set(year, data);
+            }
+            else if (team.includes('Teams')) {
+                yearMap.set(year, data);
+            }
+        });
+
+        return Array.from(yearMap.values()).sort((a, b) => b.Year - a.Year);
+    };
+
+    const filterPitchesByYear = (pitches, year) => {
+        if (!pitches?.length || !year) return [];
+        return pitches.filter(p => {
+            const pitchYear = new Date(p.game_date).getFullYear();
+            return pitchYear === year;
+        });
+    };
+
+    const uniqueData1 = getUniqueData(playerData1);
+    const uniqueData2 = getUniqueData(playerData2);
 
     return (
     <div className="compare-container">
@@ -260,7 +296,6 @@ function PitcherCompare() {
         )}
         </div>
         <div className="matchup-search-section">
-            {/* Pitcher search */}
             <label className="matchup-search-label">Pitcher A:</label>
             <div className="matchup-search-box">
             <input
@@ -276,9 +311,9 @@ function PitcherCompare() {
                 <ul className="matchup-search-suggestions">
                 {filteredPitchers1.map((p, i) => (
                     <li
-                    key={i}
-                    className="matchup-search-suggestion-item"
-                    onMouseDown={() => handleSelectPitcher1(p)}
+                        key={i}
+                        className="matchup-search-suggestion-item"
+                        onMouseDown={() => handleSelectPitcher1(p)}
                     >
                     {p.Name}
                     </li>
@@ -291,7 +326,7 @@ function PitcherCompare() {
             <div className="matchup-search-box">
             <input
                 type="text"
-                placeholder="Search for a batter..."
+                placeholder="Search for a pitcher..."
                 value={pitcherInput2}
                 onChange={(e) => setPitcherInput2(e.target.value)}
                 onFocus={() => setIsPitcherFocused2(true)}
@@ -302,9 +337,9 @@ function PitcherCompare() {
                 <ul className="matchup-search-suggestions">
                 {filteredPitchers2.map((b, i) => (
                     <li
-                    key={i}
-                    className="matchup-search-suggestion-item"
-                    onMouseDown={() => handleSelectPitcher2(b)}
+                        key={i}
+                        className="matchup-search-suggestion-item"
+                        onMouseDown={() => handleSelectPitcher2(b)}
                     >
                     {b.Name}
                     </li>
@@ -317,41 +352,62 @@ function PitcherCompare() {
 
         {isLoading ? (
             <p style={{ marginTop: '200px' }}>Loading…</p>
-        ) : commonYears.length === 0  && isSubmitted ? (
-            <p style={{ marginTop: '200px' }}>
-                No matched year between {confirmedPitcher1?.Name} and {confirmedPitcher2?.Name}.
-            </p>
         ) : (
             <>
-                {commonYears.length > 0 && (
-                <div className="compare-year-select-section">
-                    <label className="compare-year-select-label">Year: </label>
-                    <select
-                    className="compare-year-select-dropdown"
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    >
-                    {commonYears.map((year) => (
-                        <option key={year} value={year}>
-                        {year}
-                        </option>
-                    ))}
-                    </select>
-                </div>
+                {confirmedPitcher1 && confirmedPitcher2 && (
+                    <div className="compare-year-select-section">
+                        <div style={{ marginRight: "20px" }}>
+                        <label className="compare-year-select-label">{confirmedPitcher1.Name} Year: </label>
+                        <select
+                            className="compare-year-select-dropdown"
+                            value={selectedYear1 || ''}
+                            onChange={(e) => setSelectedYear1(parseInt(e.target.value))}
+                        >
+                            {uniqueData1.map((data, index) => (
+                                <option key={`${data.Year}-${index}`} value={data.Year}>
+                                    {data.Year}
+                                </option>
+                            ))}
+                        </select>
+                        </div>
+
+                        <div>
+                        <label className="compare-year-select-label">{confirmedPitcher2.Name} Year: </label>
+                        <select
+                            className="compare-year-select-dropdown"
+                            value={selectedYear2 || ''}
+                            onChange={(e) => setSelectedYear2(parseInt(e.target.value))}
+                        >
+                            {uniqueData2.map((data, index) => (
+                                <option key={`${data.Year}-${index}`} value={data.Year}>
+                                    {data.Year}
+                                </option>
+                            ))}
+                        </select>
+                        </div>
+                    </div>
                 )}
 
-                {selectedYear &&
-                playerData1.length > 0 &&
-                playerData2.length > 0 &&
-                (() => {
-                    const player1 = playerData1.find((d) => d.Year === selectedYear);
-                    const player2 = playerData2.find((d) => d.Year === selectedYear);
+                {playerData1.length > 0 && playerData2.length > 0 && (() => {
+                    const player1 = uniqueData1.find((d) => d.Year === selectedYear1);
+                    const player2 = uniqueData2.find((d) => d.Year === selectedYear2);
 
                     const keys = displayKeys;
-                    const noNameKeys = keys.filter((key) => key !== "Name");
+                    const noNameKeys = keys.filter((key) => key !== "Name" && key !== "IP");
 
                     let player1Score = 0;
                     let player2Score = 0;
+
+                    const formatNumber = (val, key) => {
+
+                        const twoDecimalKeys = new Set(["ERA", "K9", "BB9", "WHIP"]);
+                        const oneDecimalKeys = new Set(["Chase", "Whiff"]);
+
+                        if (twoDecimalKeys.has(key)) return val.toFixed(2);
+                        if (oneDecimalKeys.has(key)) return val.toFixed(1);
+
+                        return val;
+                    };
 
                     noNameKeys.forEach((key) => {
                     const result = compareValue(key, player1[key], player2[key]);
@@ -369,6 +425,7 @@ function PitcherCompare() {
                             <thead>
                                 <tr>
                                     <th>Stat</th>
+                                    <th>IP</th>
                                     {noNameKeys.map((key) => (
                                         <th key={key}>{key === "Chase" ? "Chase%" : key === "Whiff" ? "Whiff%" : key}</th>
                                     ))}
@@ -377,7 +434,8 @@ function PitcherCompare() {
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>{confirmedPitcher1?.Name}</td>
+                                    <td style={{fontWeight: 'bold', backgroundColor: 'transparent'}}>{confirmedPitcher1.Name}</td>
+                                    <td style={{fontWeight: 'bold', backgroundColor: 'transparent'}}>{player1.IP.toFixed(1)}</td>
                                     {noNameKeys.map((key) => (
                                         <td
                                             key={key}
@@ -397,7 +455,7 @@ function PitcherCompare() {
                                                     : 'transparent',
                                             }}
                                         >
-                                            {player1[key]}
+                                            {formatNumber(player1[key], key)}
                                         </td>
                                     ))}
                                     <td
@@ -416,13 +474,16 @@ function PitcherCompare() {
                                                 ? '#ffe6e6'
                                                 : '#f0f0f0',
                                         }}
-                                    >{player1Score}</td>
+                                    >
+                                        {player1Score}
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td>{confirmedPitcher2?.Name}</td>
+                                    <td style={{fontWeight: 'bold', backgroundColor: 'transparent'}}>{confirmedPitcher2.Name}</td>
+                                    <td style={{fontWeight: 'bold', backgroundColor: 'transparent'}}>{player2.IP.toFixed(1)}</td>
                                     {noNameKeys.map((key) => (
                                         <td
-                                            key={key}
+                                            key={key}   
                                             style={{
                                                 fontWeight: 'bold',
                                                 color:
@@ -439,7 +500,7 @@ function PitcherCompare() {
                                                     : 'transparent',
                                             }}
                                         >
-                                            {player2[key]}
+                                            {formatNumber(player2[key], key)}
                                         </td>
                                     ))}
                                     <td
@@ -458,7 +519,9 @@ function PitcherCompare() {
                                                 ? '#ffe6e6'
                                                 : '#f0f0f0',
                                         }}
-                                    >{player2Score}</td>
+                                    >
+                                        {player2Score}
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

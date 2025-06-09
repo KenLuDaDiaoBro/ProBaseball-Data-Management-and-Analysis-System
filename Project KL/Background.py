@@ -336,35 +336,6 @@ def pitcher_data():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-@app.route("/api/BatterPitches")
-def batter_data():
-    batter_id = request.args.get("batter")
-
-    if not batter_id:
-        return jsonify({"error": "Missing batter ID"}), 400
-
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
-
-    try:
-        query = """
-            SELECT game_date, batter_id, pitch_type, description,
-                   release_speed, zone, events
-            FROM matchup
-            WHERE batter_id = %s
-            ORDER BY game_date DESC
-        """
-        cursor.execute(query, (batter_id,))
-        result = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    
+       
 if __name__ == "__main__":
     app.run(debug=True)

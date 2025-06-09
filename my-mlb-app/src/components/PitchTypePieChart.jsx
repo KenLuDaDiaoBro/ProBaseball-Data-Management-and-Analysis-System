@@ -88,7 +88,7 @@ const PitchTypePieChart = ({ pitchData }) => {
   };
 
   return (
-    <div style={{ minWidth: 350, margin: '0 auto', textAlign: 'center'}}>
+    <div style={{ minWidth: 350, minHeight: 500, textAlign: 'center'}}>
       <Pie data={chartData} options={options} />
       <p style={{ textAlign: 'center', marginTop: '20px' }}>Total Pitch: {totalCount}</p>
     </div>
