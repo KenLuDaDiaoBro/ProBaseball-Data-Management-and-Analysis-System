@@ -25,7 +25,28 @@ const pitchTypeMap = {
   FO: "Forkball",
   PO: "Pitch Out",
   IN: "Intentional Ball",
+  ST: "Sweeper",
   UN: "Unknown",
+};
+
+const pitchTypeColors = {
+  "Four-Seam Fastball": '#FF6384', // 紅色
+  "Curveball": '#FFCE56',          // 黃色
+  "Slider": '#36A2EB',             // 藍色
+  "Changeup": '#8BC34A',           // 綠色
+  "Sweeper": '#1E3A8A',            // 深藍色
+  "Two-Seam Fastball": '#FF9800',  // 橙色
+  "Sinker": '#9C27B0',             // 紫色
+  "Cutter": '#00BCD4',             // 青色
+  "Splitter": '#E91E63',           // 粉紅色
+  "Knuckle Curve": '#795548',      // 棕色
+  "Screwball": '#607D8B',          // 灰藍色
+  "Knuckleball": '#FF5733',        // 深橙色
+  "Eephus": '#C70039',             // 深紅色
+  "Forkball": '#900C3F',           // 深紫色
+  "Pitch Out": '#581845',          // 暗紫色
+  "Intentional Ball": '#2ECC71',   // 亮綠色
+  "Unknown": '#95A5A6',            // 灰色
 };
 
 const PitchTypePieChart = ({ pitchData }) => {
@@ -46,10 +67,8 @@ const PitchTypePieChart = ({ pitchData }) => {
   const percentages = counts.map(count => totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : 0);
   const displayLabels = labels.map((label, index) => `${label} (${percentages[index]}%)`);
 
-  const backgroundColors = [
-    '#FF6384', '#36A2EB', '#FFCE56', '#8BC34A', '#FF9800',
-    '#9C27B0', '#00BCD4', '#E91E63', '#795548', '#607D8B'
-  ];
+  // 根據球種動態生成顏色
+  const backgroundColors = labels.map(label => pitchTypeColors[label] || pitchTypeColors['Unknown']);
 
   const chartData = {
     labels: displayLabels,
@@ -69,11 +88,7 @@ const PitchTypePieChart = ({ pitchData }) => {
         display: false, // Disable data labels on the chart
       },
       legend: {
-        display: true,
-        position: 'bottom',
-        labels: {
-          padding: 18,
-        },
+        display: false,
       },
       tooltip: {
         callbacks: {
@@ -87,10 +102,34 @@ const PitchTypePieChart = ({ pitchData }) => {
     },
   };
 
+  const CustomLegend = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px' }}>
+      {chartData.labels.map((label, index) => (
+        <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
+          <div
+            style={{
+              width: '20px',
+              height: '20px',
+              backgroundColor: chartData.datasets[0].backgroundColor[index],
+              marginRight: '10px',
+              border: '1px solid #fff',
+            }}
+          />
+          <span>{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <div style={{ minWidth: 350, minHeight: 500, textAlign: 'center'}}>
-      <Pie data={chartData} options={options} />
-      <p style={{ textAlign: 'center', marginTop: '20px' }}>Total Pitch: {totalCount}</p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+      <div style={{ minWidth: 200, minHeight: 200, textAlign: 'center' }}>
+        <Pie data={chartData} options={options} />
+        <p style={{ textAlign: 'center', marginTop: '20px' }}>Total: {totalCount}</p>
+      </div>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <CustomLegend />
+      </div>
     </div>
   );
 };

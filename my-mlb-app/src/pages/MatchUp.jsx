@@ -346,9 +346,19 @@ function MatchUp() {
                 <thead>
                   <tr>
                     <th>Year</th>
-                    <th>PA</th><th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th>
-                    <th>SO</th><th>BB</th><th>HBP</th>
-                    <th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=PA`)}>PA</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=AB`)}>AB</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=H`)}>H</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=H2`)}>2B</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=H3`)}>3B</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=HR`)}>HR</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=SO`)}>SO</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=BB`)}>BB</th>
+                    <th>HBP</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=AVG`)}>AVG</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=OBP`)}>OBP</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=SLG`)}>SLG</th>
+                    <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=&sortKey=OPS`)}>OPS</th>
                   </tr>
                 </thead>
                 <tbody>

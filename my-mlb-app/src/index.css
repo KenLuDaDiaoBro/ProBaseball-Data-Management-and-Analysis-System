@@ -251,7 +251,6 @@ button:focus-visible {
   padding-top: 40px;
 }
 
-/* ========== 標題 ========== */
 .player-detail-player-name {
   width: 300px;
   margin-top: 120px;
@@ -304,7 +303,6 @@ button:focus-visible {
   margin-bottom: 12px;
 }
 
-/* ========== 量表圖表 ========== */
 .player-detail-gauge-wrapper {
   position: absolute;
   top: 170px;
@@ -334,14 +332,21 @@ button:focus-visible {
   color: #333;
 }
 
-/* ========== 表格 ========== */
 .player-detail-stats-wrapper {
   width: 100%;
-  margin-top: 260px;
+  margin-top: 300px;
   display: flex;
-  justify-content: center; /* 水平置中 */
-  overflow-x: hidden; /* 防止水平滾動 */
+  justify-content: center;
+  overflow-x: hidden;
   box-sizing: border-box;
+  padding-bottom: 40px;
+}
+
+.player-detail-table-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .player-detail-stats-table {
@@ -355,15 +360,21 @@ button:focus-visible {
 
 .player-detail-stats-table th,
 .player-detail-stats-table td {
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   padding: 10px;
   text-align: center;
 }
 
 .player-detail-stats-table th {
-  background-color: #f2f2f2;
+  background-color: #e0e0e0;
   color: #333;
   font-weight: 600;
+}
+
+.player-detail-stats-table th:nth-child(n+3):hover {
+  background-color: #D0D0D0;
+  color: #0080FF;
+  cursor: pointer;
 }
 
 .player-detail-stats-table tr {
@@ -532,16 +543,22 @@ button:focus-visible {
 
 .team-detail-stats-table th,
 .team-detail-stats-table td {
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   padding: 8px 12px;
   text-align: center;
   white-space: nowrap;
 }
 
 .team-detail-stats-table th {
-  background: #007bff;
-  color: #fff;
+  background-color: #e0e0e0;
+  color: #333;
   font-weight: 600;
+}
+
+.team-detail-stats-table th:not(:first-child):hover {
+  background-color: #D0D0D0;
+  color: #0080FF;
+  cursor: pointer;
 }
 
 .team-detail-stats-table tr:nth-child(even) {
@@ -1038,8 +1055,12 @@ button:focus-visible {
 .matchup-table th {
   background-color: #f0fdf4;
   font-weight: 600;
-  cursor: pointer;
   user-select: none;
+}
+
+.matchup-table th:not(:first-child):not(:nth-child(10)):hover {
+  color: #0080FF;
+  cursor: pointer;
 }
 
 .matchup-table tr:nth-child(even) {
@@ -1227,7 +1248,6 @@ button:focus-visible {
     flex: 1 1 45%;
     display: flex;
     justify-content: center;
-    min-width: 300px;
 }
 
 .pie-inner {
@@ -1236,7 +1256,6 @@ button:focus-visible {
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
 }
 

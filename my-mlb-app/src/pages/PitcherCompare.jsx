@@ -351,7 +351,7 @@ function PitcherCompare() {
         </div>
 
         {isLoading ? (
-            <p style={{ marginTop: '200px' }}>Loading…</p>
+            <p style={{ marginTop: '200px', textAlign: 'center' }}>Loading…</p>
         ) : (
             <>
                 {confirmedPitcher1 && confirmedPitcher2 && (

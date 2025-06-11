@@ -7,6 +7,7 @@ import {
 import "react-circular-progressbar/dist/styles.css";
 import BatterHeatMap from '../components/BatterHeatmap';
 import PitcherHeatMap from '../components/PitcherHeatmap';
+import PitchTypePieChart from '../components/PitchTypePieChart';
 
 function PlayerDetail() {
   const { id } = useParams(); // 取得 URL 中的球員 ID
@@ -18,6 +19,9 @@ function PlayerDetail() {
   const [filteredOptions, setFilteredOptions] = useState([]);
   const [allPlayersData, setAllPlayersData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
+  const [rawPitches, setRawPitches] = useState([]);
+  const [pitcherPitches, setPitcherPitches] = useState([]);
+
   const updatedStats = [...playerData];
   const yearsWithTeams = useMemo(() => {
     return new Set(
@@ -27,32 +31,85 @@ function PlayerDetail() {
     );
   }, [playerData]);
 
+  const sortedPlayerData = useMemo(() => {
+    return [...playerData].sort((a, b) => b.Year - a.Year);
+  }, [playerData]);
+
+  const filterPitchesByYear = (pitches, year) => {
+    if (!pitches?.length || !year) return [];
+    return pitches.filter(p => {
+      const pitchYear = new Date(p.game_date).getFullYear();
+      return pitchYear === year;
+    });
+  };
+
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/selected_player", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setPlayerStats(data);
-  
-          // 取得最大年份作為預設 selectedYear
-          const years = data.map(p => p.Year).filter(y => typeof y === 'number');
-          const maxYear = Math.max(...years);
-          setSelectedYear(maxYear);
-        } else {
-          setPlayerStats([]);
-          setSelectedYear(null); // 清除年份選擇
+    const fetchPlayerStats = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:5000/api/selected_player", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      })
-      .catch((error) => {
+
+        const data = await response.json();
+        return data; // 返回 API 數據
+      } catch (error) {
         console.error("Error fetching player details:", error);
+        return [];
+      }
+    };
+
+    const fetchPitcherPitches = async (playerDataFromApi) => {
+      if (!playerDataFromApi.length || playerDataFromApi[0].Type !== "Pitcher") {
+        console.log("Condition not met: playerDataFromApi =", playerDataFromApi);
+        setRawPitches([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/api/PitcherPitches?pitcher=${id}`);
+        console.log("Response status:", response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setRawPitches(data);
+      } catch (error) {
+        console.error("Error fetching pitcher pitches:", error);
+        setRawPitches([]);
+      }
+    };
+
+    const fetchData = async () => {
+      const playerDataFromApi = await fetchPlayerStats();
+      if (Array.isArray(playerDataFromApi) && playerDataFromApi.length > 0) {
+        setPlayerStats(playerDataFromApi);
+        const years = playerDataFromApi.map(p => p.Year).filter(y => typeof y === 'number');
+        const maxYear = Math.max(...years);
+        setSelectedYear(maxYear);
+      } else {
         setPlayerStats([]);
         setSelectedYear(null);
-      });
+      }
+      await fetchPitcherPitches(playerDataFromApi);
+    };
+
+    fetchData();
   }, [id]);
+
+  useEffect(() => {
+    if (selectedYear && rawPitches.length) {
+      const filteredPitches = filterPitchesByYear(rawPitches, selectedYear);
+      setPitcherPitches(filteredPitches);
+    } else {
+      setPitcherPitches([]);
+    }
+  }, [selectedYear, rawPitches]);
 
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/players")
@@ -116,7 +173,7 @@ function PlayerDetail() {
   // 選擇下拉選項 (player 或 team) 時跳轉
  const handleSelectOption = (opt) => {
    setSearchTerm("");
-   setFilteredOptions([]);      // ← 這裡清空 filteredOptions
+   setFilteredOptions([]);
    if (opt.type === "player") {
     navigate(`/playerDetail/${opt.id}`);
    } else {
@@ -406,87 +463,133 @@ function PlayerDetail() {
 
       <div className="player-detail-stats-wrapper">
         {playerData[0].Type === "Batter" ? (
-          <table className="player-detail-stats-table">
-            <thead>
-              <tr>
-                <th>Year</th><th>Team</th><th>PA</th><th>AB</th><th>H</th>
-                <th>2B</th><th>3B</th><th>HR</th><th>RBI</th><th>SO</th>
-                <th>BB</th><th>SB</th><th>CS</th><th>AVG</th><th>OBP</th>
-                <th>SLG</th><th>OPS</th><th>Chase%</th><th>Whiff%</th><th>GB</th>
-                <th>FB</th><th>G/F</th><th>Sprint</th>
-              </tr>
-            </thead>
-            <tbody>
-              {playerData.map((stat, index) => (
-                <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
-                  <td>{stat.Year}</td>
-                  <td
-                    className="player-detail-team-cell"
-                    onClick={() => navigate(`/team/${stat.Team}`)}
-                  >
-                    {stat.Team}
-                  </td>
-                  <td>{stat.PA}</td><td>{stat.AB}</td><td>{stat.H}</td>
-                  <td>{stat.H2}</td><td>{stat.H3}</td><td>{stat.HR}</td><td>{stat.RBI}</td><td>{stat.SO}</td>
-                  <td>{stat.BB}</td><td>{stat.SB}</td><td>{stat.CS}</td><td>{stat.AVG.toFixed(3)}</td><td>{stat.OBP.toFixed(3)}</td>
-                  <td>{stat.SLG.toFixed(3)}</td><td>{stat.OPS.toFixed(3)}</td>
-                  <td>{isNaN(parseFloat(stat.Chase)) ? stat.Chase : parseFloat(stat.Chase).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(stat.Whiff)) ? stat.Whiff : parseFloat(stat.Whiff).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(stat.GB)) ? stat.GB : parseFloat(stat.GB).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(stat.FB)) ? stat.FB : parseFloat(stat.FB).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(stat.GF)) ? stat.GF : parseFloat(stat.GF).toFixed(2)}</td>
-                  <td>{stat.Sprint.toFixed(1)}</td>
+          <div className="player-detail-table-container">
+            <table className="player-detail-stats-table">
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Team</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=PA`)}>PA</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=AB`)}>AB</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=H`)}>H</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=H2`)}>2B</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=H3`)}>3B</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=HR`)}>HR</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=RBI`)}>RBI</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=SO`)}>SO</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=BB`)}>BB</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=SB`)}>SB</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=CS`)}>CS</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=AVG`)}>AVG</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=OBP`)}>OBP</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=SLG`)}>SLG</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=OPS`)}>OPS</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=Chase`)}>Chase%</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=Whiff`)}>Whiff%</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=GB`)}>GB</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=FB`)}>FB</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=GF`)}>G/F</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=batter&year=${selectedYear}&sortKey=Sprint`)}>Sprint</th>
                 </tr>
-              ))}
-              <tr className="player-detail-summary-row">
-                <td colSpan={2}>Career</td>
-                <td>{batterSummary.PA}</td><td>{batterSummary.AB}</td><td>{batterSummary.H}</td><td>{batterSummary.H2}</td><td>{batterSummary.H3}</td>
-                <td>{batterSummary.HR}</td><td>{batterSummary.RBI}</td><td>{batterSummary.SO}</td><td>{batterSummary.BB}</td><td>{batterSummary.SB}</td>
-                <td>{batterSummary.CS}</td><td>{batterSummary.AVG}</td><td>{batterSummary.OBP}</td><td>{batterSummary.SLG}</td><td>{batterSummary.OPS}</td>
-                <td>{batterSummary.Chase}</td><td>{batterSummary.Whiff}</td><td>{batterSummary.GB}</td><td>{batterSummary.FB}</td><td>{batterSummary.GF}</td>
-                <td>/</td>
-              </tr>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedPlayerData.map((stat, index) => (
+                  <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
+                    <td>{stat.Year}</td>
+                    <td
+                      className="player-detail-team-cell"
+                      onClick={() => navigate(`/team/${stat.Team}`)}
+                    >
+                      {stat.Team}
+                    </td>
+                    <td>{stat.PA}</td><td>{stat.AB}</td><td>{stat.H}</td>
+                    <td>{stat.H2}</td><td>{stat.H3}</td><td>{stat.HR}</td><td>{stat.RBI}</td><td>{stat.SO}</td>
+                    <td>{stat.BB}</td><td>{stat.SB}</td><td>{stat.CS}</td><td>{stat.AVG.toFixed(3)}</td><td>{stat.OBP.toFixed(3)}</td>
+                    <td>{stat.SLG.toFixed(3)}</td><td>{stat.OPS.toFixed(3)}</td>
+                    <td>{isNaN(parseFloat(stat.Chase)) ? stat.Chase : parseFloat(stat.Chase).toFixed(1)}</td>
+                    <td>{isNaN(parseFloat(stat.Whiff)) ? stat.Whiff : parseFloat(stat.Whiff).toFixed(1)}</td>
+                    <td>{isNaN(parseFloat(stat.GB)) ? stat.GB : parseFloat(stat.GB).toFixed(1)}</td>
+                    <td>{isNaN(parseFloat(stat.FB)) ? stat.FB : parseFloat(stat.FB).toFixed(1)}</td>
+                    <td>{isNaN(parseFloat(stat.GF)) ? stat.GF : parseFloat(stat.GF).toFixed(2)}</td>
+                    <td>{stat.Sprint.toFixed(1)}</td>
+                  </tr>
+                ))}
+                <tr className="player-detail-summary-row">
+                  <td colSpan={2}>Career</td>
+                  <td>{batterSummary.PA}</td><td>{batterSummary.AB}</td><td>{batterSummary.H}</td><td>{batterSummary.H2}</td><td>{batterSummary.H3}</td>
+                  <td>{batterSummary.HR}</td><td>{batterSummary.RBI}</td><td>{batterSummary.SO}</td><td>{batterSummary.BB}</td><td>{batterSummary.SB}</td>
+                  <td>{batterSummary.CS}</td><td>{batterSummary.AVG}</td><td>{batterSummary.OBP}</td><td>{batterSummary.SLG}</td><td>{batterSummary.OPS}</td>
+                  <td>{batterSummary.Chase}</td><td>{batterSummary.Whiff}</td><td>{batterSummary.GB}</td><td>{batterSummary.FB}</td><td>{batterSummary.GF}</td>
+                  <td>/</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         ) : playerData[0].Type === "Pitcher" ? (
-          <table className="player-detail-stats-table">
-            <thead>
-              <tr>
-                <th>Year</th><th>Team</th><th>W</th><th>L</th><th>ERA</th>
-                <th>IP</th><th>H</th><th>R</th><th>ER</th><th>HR</th>
-                <th>SO</th><th>K9</th><th>BB</th><th>BB9</th><th>WHIP</th>
-                <th>Chase%</th><th>Whiff%</th><th>GB</th><th>FB</th><th>G/F</th>
-              </tr>
-            </thead>
-            <tbody>
-              {playerData.map((stat, index) => (
-                <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
-                  <td>{stat.Year}</td>
-                  <td
-                    className="player-detail-team-cell"
-                    onClick={() => navigate(`/team/${stat.Team}`)}
-                  >
-                    {stat.Team}
-                  </td>
-                  <td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA.toFixed(2)}</td>
-                  <td>{stat.IP.toFixed(1)}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
-                  <td>{stat.SO}</td><td>{stat.K9.toFixed(2)}</td><td>{stat.BB}</td><td>{stat.BB9.toFixed(2)}</td><td>{stat.WHIP.toFixed(2)}</td>
-                  <td>{isNaN(parseFloat(stat.Chase)) ? stat.Chase : parseFloat(stat.Chase).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(stat.Whiff)) ? stat.Whiff : parseFloat(stat.Whiff).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(stat.GB)) ? stat.GB : parseFloat(stat.GB).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(stat.FB)) ? stat.FB : parseFloat(stat.FB).toFixed(1)}</td>
-                  <td>{isNaN(parseFloat(stat.GF)) ? stat.GF : parseFloat(stat.GF).toFixed(2)}</td>
+          <div className="player-detail-table-container">
+            <table className="player-detail-stats-table">
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Team</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=W`)}>W</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=L`)}>L</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=ERA`)}>ERA</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=IP`)}>IP</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=H`)}>H</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=R`)}>R</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=ER`)}>ER</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=HR`)}>HR</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=SO`)}>SO</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=K9`)}>K/9</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=BB`)}>BB</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=BB9`)}>BB/9</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=WHIP`)}>WHIP</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=Chase`)}>Chase%</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=Whiff`)}>Whiff%</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=GB`)}>GB</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=FB`)}>FB</th>
+                  <th onClick={() => navigate(`/LeaderBoardDetail?type=pitcher&year=${selectedYear}&sortKey=GF`)}>G/F</th>
                 </tr>
-              ))}
-              <tr className="player-detail-summary-row">
-                <td colSpan={2}>Career</td>
-                <td>{pitcherSummary.W}</td><td>{pitcherSummary.L}</td><td>{pitcherSummary.ERA}</td><td>{pitcherSummary.IP}</td><td>{pitcherSummary.H}</td>
-                <td>{pitcherSummary.R}</td><td>{pitcherSummary.ER}</td><td>{pitcherSummary.HR}</td><td>{pitcherSummary.SO}</td><td>{pitcherSummary.K9}</td>
-                <td>{pitcherSummary.BB}</td><td>{pitcherSummary.BB9}</td><td>{pitcherSummary.WHIP}</td><td>{pitcherSummary.Chase}</td><td>{pitcherSummary.Whiff}</td>
-                <td>{pitcherSummary.GB}</td><td>{pitcherSummary.FB}</td><td>{pitcherSummary.GF}</td>
-              </tr>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedPlayerData.map((stat, index) => (
+                  <tr key={index} className={stat.Team && stat.Team.includes("Team") ? "team-row" : ""}>
+                    <td>{stat.Year}</td>
+                    <td
+                      className="player-detail-team-cell"
+                      onClick={() => navigate(`/team/${stat.Team}`)}
+                    >
+                      {stat.Team}
+                    </td>
+                    <td>{stat.W}</td><td>{stat.L}</td><td>{stat.ERA.toFixed(2)}</td>
+                    <td>{stat.IP.toFixed(1)}</td><td>{stat.H}</td><td>{stat.R}</td><td>{stat.ER}</td><td>{stat.HR}</td>
+                    <td>{stat.SO}</td><td>{stat.K9.toFixed(2)}</td><td>{stat.BB}</td><td>{stat.BB9.toFixed(2)}</td><td>{stat.WHIP.toFixed(2)}</td>
+                    <td>{isNaN(parseFloat(stat.Chase)) ? stat.Chase : parseFloat(stat.Chase).toFixed(1)}</td>
+                    <td>{isNaN(parseFloat(stat.Whiff)) ? stat.Whiff : parseFloat(stat.Whiff).toFixed(1)}</td>
+                    <td>{isNaN(parseFloat(stat.GB)) ? stat.GB : parseFloat(stat.GB).toFixed(1)}</td>
+                    <td>{isNaN(parseFloat(stat.FB)) ? stat.FB : parseFloat(stat.FB).toFixed(1)}</td>
+                    <td>{isNaN(parseFloat(stat.GF)) ? stat.GF : parseFloat(stat.GF).toFixed(2)}</td>
+                  </tr>
+                ))}
+                <tr className="player-detail-summary-row">
+                  <td colSpan={2}>Career</td>
+                  <td>{pitcherSummary.W}</td><td>{pitcherSummary.L}</td><td>{pitcherSummary.ERA}</td><td>{pitcherSummary.IP}</td><td>{pitcherSummary.H}</td>
+                  <td>{pitcherSummary.R}</td><td>{pitcherSummary.ER}</td><td>{pitcherSummary.HR}</td><td>{pitcherSummary.SO}</td><td>{pitcherSummary.K9}</td>
+                  <td>{pitcherSummary.BB}</td><td>{pitcherSummary.BB9}</td><td>{pitcherSummary.WHIP}</td><td>{pitcherSummary.Chase}</td><td>{pitcherSummary.Whiff}</td>
+                  <td>{pitcherSummary.GB}</td><td>{pitcherSummary.FB}</td><td>{pitcherSummary.GF}</td>
+                </tr>
+              </tbody>
+            </table>
+            {pitcherPitches.length > 0 ? (
+              <div className="player-detail-pitch-type-chart">
+                <h2 className="player-detail-heatmap-title">Pitch Type Distribution</h2>
+                <PitchTypePieChart pitchData={pitcherPitches} />
+              </div>
+            ) : (
+              <p>Loading pitch type data...</p>
+            )}
+          </div>
         ) : (
           <p>Unknown player type</p>
         )}
