@@ -12,12 +12,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
-# 設定目標球隊
 Teams = ["Mets"]
 players_data = []
 Yr = [2023, 2024]
 
-# 設定瀏覽器
 s = Service("C:/Users/afatf/Desktop/ProBaseball-Data-Management-and-Analysis-System/Project KL/chromedriver-win64/chromedriver.exe")
 s = Service(ChromeDriverManager().install())
 opts = Options()
@@ -48,11 +46,10 @@ for Year in Yr:
             Divison = "National League West"
                 
         try:  
-            # 開啟網站並搜尋球隊
             element = driver.find_element(By.ID, 'player-auto-complete')
             element.send_keys(Team)
             time.sleep(2)
-            ActionChains(driver).send_keys(Keys.ENTER).perform()  # 使用 ActionChains 按下 ENTER
+            ActionChains(driver).send_keys(Keys.ENTER).perform()
             time.sleep(2)
             year_dropdown = Select(driver.find_element(By.ID, "ddlSeason"))
             year_dropdown.select_by_value(f"{Year}")
@@ -101,15 +98,15 @@ for Year in Yr:
                     else:
                         Index = -1
                         for row in rows:
-                            season = row.find_element(By.XPATH, ".//td[1]").text.strip()  # 取得年份
+                            season = row.find_element(By.XPATH, ".//td[1]").text.strip() 
                             if season == str(Year):
-                                GGB = row.find_element(By.XPATH, ".//td[2]").text.strip()  # GB %
+                                GGB = row.find_element(By.XPATH, ".//td[2]").text.strip()
                                 try:
                                     float(GGB)
                                     Index += 1
                                     if Index == 2:
-                                        gb = row.find_element(By.XPATH, ".//td[2]").text.strip()  # GB %
-                                        fb = row.find_element(By.XPATH, ".//td[4]").text.strip()  # FB %
+                                        gb = row.find_element(By.XPATH, ".//td[2]").text.strip()
+                                        fb = row.find_element(By.XPATH, ".//td[4]").text.strip()
                                         print(f"✅ GB%: {gb}, FB%: {fb}")
                                         if float(fb) != 0:
                                             gf = round(float(gb) / float(fb) , 2)
@@ -144,9 +141,9 @@ for Year in Yr:
                         texts = element.find_elements(By.TAG_NAME, "text")
                         for text in texts:
                             content = text.text.strip()
-                            if not content:  # 如果内容为空，则替换为 .000
+                            if not content:
                                 AVG_Zone.append(".000")
-                            elif content[0].isdigit() or content.startswith('.'):  # 判断是否为数字
+                            elif content[0].isdigit() or content.startswith('.'):
                                 AVG_Zone.append(content)
                     except:
                         for  num in range(0, 13):
@@ -235,15 +232,15 @@ for Year in Yr:
                     else:
                         Index = -1
                         for row in rows:
-                            season = row.find_element(By.XPATH, ".//td[1]").text.strip()  # 取得年份
+                            season = row.find_element(By.XPATH, ".//td[1]").text.strip()
                             if season == str(Year):
-                                GGB = row.find_element(By.XPATH, ".//td[2]").text.strip()  # GB %
+                                GGB = row.find_element(By.XPATH, ".//td[2]").text.strip()
                                 try:
                                     float(GGB)
                                     Index += 1
                                     if Index == 2:
-                                        gb = row.find_element(By.XPATH, ".//td[2]").text.strip()  # GB %
-                                        fb = row.find_element(By.XPATH, ".//td[4]").text.strip()  # FB %
+                                        gb = row.find_element(By.XPATH, ".//td[2]").text.strip()
+                                        fb = row.find_element(By.XPATH, ".//td[4]").text.strip()
                                         print(f"✅ GB%: {gb}, FB%: {fb}")
                                         if float(fb) != 0:
                                             gf = round(float(gb) / float(fb) , 2)
@@ -277,9 +274,9 @@ for Year in Yr:
                     AVG_Zone = []
                     for text in texts:
                         content = text.text.strip()
-                        if not content:  # 如果内容为空，则替换为 .000
+                        if not content:
                             AVG_Zone.append("0")
-                        elif content[0].isdigit() or content.startswith('.'):  # 判断是否为数字
+                        elif content[0].isdigit() or content.startswith('.'):
                             AVG_Zone.append(content)
         
                     element = driver.find_element(By.XPATH, "//a[contains(text(), 'Standard')]")
